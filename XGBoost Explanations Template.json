@@ -1,0 +1,3868 @@
+﻿{
+  "paragraphs": [
+    {
+      "text": "%md\r\n\r\n# 1. Using FxAI to explain XGBoost models\r\n\r\nThis sample notebook demonstrates the capabilities of the XGBoost explanation API, and produces many of the analyses that help us better understand the content and behavior of these often complex models. The notebook consists of three major sections:\r\n\r\n1. **Import dataset and XGBoost model**\r\n2. **Analyzing the model for monotonicity**\r\n3. **Explaining the model in general**\r\n4. **Explaining specific predictions**\r\n\r\nThe FxAI APIs are Python, and due to a handful of external libraries, require Python 2.7, which is available in Analytics Workbench today via the `%python` interpreter. (The `%pyspark` interpreter runs Python 3.4.)\r\n\r\nWe begin by importing a dataset and a xgboost model.",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h1>1. Using FxAI to explain XGBoost models</h1>\n<p>This sample notebook demonstrates the capabilities of the XGBoost explanation API, and produces many of the analyses that help us better understand the content and behavior of these often complex models. The notebook consists of three major sections:</p>\n<ol>\n  <li><strong>Import dataset and XGBoost model</strong></li>\n  <li><strong>Analyzing the model for monotonicity</strong></li>\n  <li><strong>Explaining the model in general</strong></li>\n  <li><strong>Explaining specific predictions</strong></li>\n</ol>\n<p>The FxAI APIs are Python, and due to a handful of external libraries, require Python 2.7, which is available in Analytics Workbench today via the <code>%python</code> interpreter. (The <code>%pyspark</code> interpreter runs Python 3.4.)</p>\n<p>We begin by importing a dataset and a xgboost model.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113175_728528098",
+      "id": "20180330-034940_934843978",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7749"
+    },
+    {
+      "title": "Select Models and Datasets Folder",
+      "text": "%python\nimport os \nimport time\n\nfiles_list = []\nroot = 'xai_model_files'\nfor file in os.listdir(root):\n    files_list.append((file, file + ' - ' + str(time.ctime(os.path.getmtime(root + '/' + file)))))\n    \n\nsel_folder = z.select(\"Select folder name\", files_list)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "runOnSelectionChange": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "Select folder name": "ml_splval"
+        },
+        "forms": {
+          "Select folder name": {
+            "name": "Select folder name",
+            "displayName": "Select folder name",
+            "type": "select",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "xai_samples",
+                "displayName": "xai_samples - Fri Apr 20 07:30:04 2018",
+                "$$hashKey": "object:8815"
+              },
+              {
+                "value": "atlas_sc_unweighted",
+                "displayName": "atlas_sc_unweighted - Fri Apr 20 15:10:38 2018",
+                "$$hashKey": "object:8816"
+              },
+              {
+                "value": "your_model_name",
+                "displayName": "your_model_name - Fri Apr 20 16:06:43 2018",
+                "$$hashKey": "object:8817"
+              },
+              {
+                "value": "atlas_nsc_weighted",
+                "displayName": "atlas_nsc_weighted - Fri Apr 20 16:23:32 2018",
+                "$$hashKey": "object:8818"
+              },
+              {
+                "value": "geoffrey_model",
+                "displayName": "geoffrey_model - Mon Apr 23 16:01:10 2018",
+                "$$hashKey": "object:8819"
+              },
+              {
+                "value": "atlas_nsc_weighted_no60",
+                "displayName": "atlas_nsc_weighted_no60 - Thu Apr 26 19:21:59 2018",
+                "$$hashKey": "object:8820"
+              },
+              {
+                "value": "andyf_prospect_test_1",
+                "displayName": "andyf_prospect_test_1 - Mon Apr 30 04:15:47 2018",
+                "$$hashKey": "object:8821"
+              },
+              {
+                "value": "andy_demo_prospect_p1",
+                "displayName": "andy_demo_prospect_p1 - Thu May 10 19:15:08 2018",
+                "$$hashKey": "object:8822"
+              },
+              {
+                "value": "model_gb",
+                "displayName": "model_gb - Thu May 10 19:54:22 2018",
+                "$$hashKey": "object:8823"
+              },
+              {
+                "value": "model_gb_ying",
+                "displayName": "model_gb_ying - Thu May 10 19:55:06 2018",
+                "$$hashKey": "object:8824"
+              },
+              {
+                "value": "spl_val",
+                "displayName": "spl_val - Wed May 16 06:19:00 2018",
+                "$$hashKey": "object:8825"
+              },
+              {
+                "value": "ml_splval",
+                "displayName": "ml_splval - Thu May 17 01:46:47 2018",
+                "$$hashKey": "object:8826"
+              },
+              {
+                "value": "ml_model",
+                "displayName": "ml_model - Thu May 17 01:46:54 2018",
+                "$$hashKey": "object:8827"
+              },
+              {
+                "value": "ml_models_comp",
+                "displayName": "ml_models_comp - Thu May 17 21:30:47 2018",
+                "$$hashKey": "object:8828"
+              },
+              {
+                "value": "ying_test_model1",
+                "displayName": "ying_test_model1 - Fri May 18 17:52:16 2018",
+                "$$hashKey": "object:8829"
+              }
+            ],
+            "hidden": false,
+            "$$hashKey": "object:8807"
+          }
+        }
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113176_726604354",
+      "id": "20180405-173230_943234440",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7750"
+    },
+    {
+      "title": "Import model training",
+      "text": "%python\nimport os, time\nimport pandas as pd\nimport numpy as np\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import train_test_split\n\ntrain_file_loc = root + '/' + sel_folder + '/training_data.csv.gz'\n\ndf = pd.read_csv(train_file_loc)\nz.show(df.tail(15))\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113177_726219605",
+      "id": "20180405-173325_1924791640",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7751"
+    },
+    {
+      "title": "Import model testing datasets",
+      "text": "%python\nimport os, time\nimport pandas as pd\nimport numpy as np\nfrom sklearn.metrics import accuracy_score\nfrom sklearn.model_selection import train_test_split\n\ntest_file_loc = root + '/' + sel_folder + '/testing_data.csv.gz'\ntest_df = pd.read_csv(test_file_loc)\nz.show(df.head(15))",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113177_726219605",
+      "id": "20180405-173325_431427763",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7752"
+    },
+    {
+      "title": "Select target column name",
+      "text": "%python\n# The dataset is now loaded into a dataframe.\n# Set 'target_col_name' to the name of the target column.\ndf = pd.read_csv(train_file_loc)\ntarget_col_name = z.select(\"\",[(x,x) for x in df.columns.values])\ntarget = [target_col_name]\n\n\n# column_names = list(df.columns.values)\n# column_names.remove(target_col_name)\n\n\n# x = df[column_names].as_matrix()\n# y = df[target].as_matrix()\n\n\n# train_x = x\n# train_y = y\n# feature_names = column_names\n\n# test_df = pd.read_csv(test_file_loc)\n# test_x = test_df[column_names].as_matrix()\n# test_y = test_df[target].as_matrix()\n\n# import xgboost as xgb\n# dtrain = xgb.DMatrix(train_x, train_y, weight=train_w, feature_names=feature_names)\n# dtest = xgb.DMatrix(test_x, test_y, weight=test_w, feature_names=feature_names)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "runOnSelectionChange": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "": "AGB"
+        },
+        "forms": {
+          "": {
+            "name": "",
+            "displayName": "",
+            "type": "select",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "archive",
+                "displayName": "archive",
+                "$$hashKey": "object:8938"
+              },
+              {
+                "value": "ALL0206",
+                "displayName": "ALL0206",
+                "$$hashKey": "object:8939"
+              },
+              {
+                "value": "ALL0300",
+                "displayName": "ALL0300",
+                "$$hashKey": "object:8940"
+              },
+              {
+                "value": "ALL0316",
+                "displayName": "ALL0316",
+                "$$hashKey": "object:8941"
+              },
+              {
+                "value": "ALL0436",
+                "displayName": "ALL0436",
+                "$$hashKey": "object:8942"
+              },
+              {
+                "value": "ALL0437",
+                "displayName": "ALL0437",
+                "$$hashKey": "object:8943"
+              },
+              {
+                "value": "ALL0448",
+                "displayName": "ALL0448",
+                "$$hashKey": "object:8944"
+              },
+              {
+                "value": "ALL1300",
+                "displayName": "ALL1300",
+                "$$hashKey": "object:8945"
+              },
+              {
+                "value": "ALL1360",
+                "displayName": "ALL1360",
+                "$$hashKey": "object:8946"
+              },
+              {
+                "value": "ALL1370",
+                "displayName": "ALL1370",
+                "$$hashKey": "object:8947"
+              },
+              {
+                "value": "ALL1380",
+                "displayName": "ALL1380",
+                "$$hashKey": "object:8948"
+              },
+              {
+                "value": "ALL1401",
+                "displayName": "ALL1401",
+                "$$hashKey": "object:8949"
+              },
+              {
+                "value": "ALL2005",
+                "displayName": "ALL2005",
+                "$$hashKey": "object:8950"
+              },
+              {
+                "value": "ALL2326",
+                "displayName": "ALL2326",
+                "$$hashKey": "object:8951"
+              },
+              {
+                "value": "ALL2327",
+                "displayName": "ALL2327",
+                "$$hashKey": "object:8952"
+              },
+              {
+                "value": "ALL2351",
+                "displayName": "ALL2351",
+                "$$hashKey": "object:8953"
+              },
+              {
+                "value": "ALL2420",
+                "displayName": "ALL2420",
+                "$$hashKey": "object:8954"
+              },
+              {
+                "value": "ALL2458",
+                "displayName": "ALL2458",
+                "$$hashKey": "object:8955"
+              },
+              {
+                "value": "ALL2840",
+                "displayName": "ALL2840",
+                "$$hashKey": "object:8956"
+              },
+              {
+                "value": "ALL2875",
+                "displayName": "ALL2875",
+                "$$hashKey": "object:8957"
+              },
+              {
+                "value": "ALL5072",
+                "displayName": "ALL5072",
+                "$$hashKey": "object:8958"
+              },
+              {
+                "value": "ALL5361",
+                "displayName": "ALL5361",
+                "$$hashKey": "object:8959"
+              },
+              {
+                "value": "ALL6230",
+                "displayName": "ALL6230",
+                "$$hashKey": "object:8960"
+              },
+              {
+                "value": "ALL6250",
+                "displayName": "ALL6250",
+                "$$hashKey": "object:8961"
+              },
+              {
+                "value": "ALL6900",
+                "displayName": "ALL6900",
+                "$$hashKey": "object:8962"
+              },
+              {
+                "value": "ALL6901",
+                "displayName": "ALL6901",
+                "$$hashKey": "object:8963"
+              },
+              {
+                "value": "ALL7110",
+                "displayName": "ALL7110",
+                "$$hashKey": "object:8964"
+              },
+              {
+                "value": "ALL7116",
+                "displayName": "ALL7116",
+                "$$hashKey": "object:8965"
+              },
+              {
+                "value": "ALL7333",
+                "displayName": "ALL7333",
+                "$$hashKey": "object:8966"
+              },
+              {
+                "value": "ALL7334",
+                "displayName": "ALL7334",
+                "$$hashKey": "object:8967"
+              },
+              {
+                "value": "ALL7340",
+                "displayName": "ALL7340",
+                "$$hashKey": "object:8968"
+              },
+              {
+                "value": "ALL7348",
+                "displayName": "ALL7348",
+                "$$hashKey": "object:8969"
+              },
+              {
+                "value": "ALL7440",
+                "displayName": "ALL7440",
+                "$$hashKey": "object:8970"
+              },
+              {
+                "value": "ALL7516",
+                "displayName": "ALL7516",
+                "$$hashKey": "object:8971"
+              },
+              {
+                "value": "ALL7517",
+                "displayName": "ALL7517",
+                "$$hashKey": "object:8972"
+              },
+              {
+                "value": "ALL7936",
+                "displayName": "ALL7936",
+                "$$hashKey": "object:8973"
+              },
+              {
+                "value": "ALL7937",
+                "displayName": "ALL7937",
+                "$$hashKey": "object:8974"
+              },
+              {
+                "value": "ALL7938",
+                "displayName": "ALL7938",
+                "$$hashKey": "object:8975"
+              },
+              {
+                "value": "ALL8020",
+                "displayName": "ALL8020",
+                "$$hashKey": "object:8976"
+              },
+              {
+                "value": "ALL8120",
+                "displayName": "ALL8120",
+                "$$hashKey": "object:8977"
+              },
+              {
+                "value": "ALL8152",
+                "displayName": "ALL8152",
+                "$$hashKey": "object:8978"
+              },
+              {
+                "value": "ALL8164",
+                "displayName": "ALL8164",
+                "$$hashKey": "object:8979"
+              },
+              {
+                "value": "ALL8220",
+                "displayName": "ALL8220",
+                "$$hashKey": "object:8980"
+              },
+              {
+                "value": "ALL8221",
+                "displayName": "ALL8221",
+                "$$hashKey": "object:8981"
+              },
+              {
+                "value": "ALL8320",
+                "displayName": "ALL8320",
+                "$$hashKey": "object:8982"
+              },
+              {
+                "value": "ALL8323",
+                "displayName": "ALL8323",
+                "$$hashKey": "object:8983"
+              },
+              {
+                "value": "ALL8325",
+                "displayName": "ALL8325",
+                "$$hashKey": "object:8984"
+              },
+              {
+                "value": "ALL8370",
+                "displayName": "ALL8370",
+                "$$hashKey": "object:8985"
+              },
+              {
+                "value": "ALL8560",
+                "displayName": "ALL8560",
+                "$$hashKey": "object:8986"
+              },
+              {
+                "value": "ALL9110",
+                "displayName": "ALL9110",
+                "$$hashKey": "object:8987"
+              },
+              {
+                "value": "ALL9210",
+                "displayName": "ALL9210",
+                "$$hashKey": "object:8988"
+              },
+              {
+                "value": "ALL9220",
+                "displayName": "ALL9220",
+                "$$hashKey": "object:8989"
+              },
+              {
+                "value": "ALM2002",
+                "displayName": "ALM2002",
+                "$$hashKey": "object:8990"
+              },
+              {
+                "value": "ALM2350",
+                "displayName": "ALM2350",
+                "$$hashKey": "object:8991"
+              },
+              {
+                "value": "ALM2380",
+                "displayName": "ALM2380",
+                "$$hashKey": "object:8992"
+              },
+              {
+                "value": "ALM6160",
+                "displayName": "ALM6160",
+                "$$hashKey": "object:8993"
+              },
+              {
+                "value": "ALM6200",
+                "displayName": "ALM6200",
+                "$$hashKey": "object:8994"
+              },
+              {
+                "value": "ALM6270",
+                "displayName": "ALM6270",
+                "$$hashKey": "object:8995"
+              },
+              {
+                "value": "ALM6289",
+                "displayName": "ALM6289",
+                "$$hashKey": "object:8996"
+              },
+              {
+                "value": "AUT7110",
+                "displayName": "AUT7110",
+                "$$hashKey": "object:8997"
+              },
+              {
+                "value": "BCA0300",
+                "displayName": "BCA0300",
+                "$$hashKey": "object:8998"
+              },
+              {
+                "value": "BCA0416",
+                "displayName": "BCA0416",
+                "$$hashKey": "object:8999"
+              },
+              {
+                "value": "BCA7211",
+                "displayName": "BCA7211",
+                "$$hashKey": "object:9000"
+              },
+              {
+                "value": "BCA8370",
+                "displayName": "BCA8370",
+                "$$hashKey": "object:9001"
+              },
+              {
+                "value": "BCC3421",
+                "displayName": "BCC3421",
+                "$$hashKey": "object:9002"
+              },
+              {
+                "value": "BCC3456",
+                "displayName": "BCC3456",
+                "$$hashKey": "object:9003"
+              },
+              {
+                "value": "BCC5620",
+                "displayName": "BCC5620",
+                "$$hashKey": "object:9004"
+              },
+              {
+                "value": "BCC6200",
+                "displayName": "BCC6200",
+                "$$hashKey": "object:9005"
+              },
+              {
+                "value": "BCC7110",
+                "displayName": "BCC7110",
+                "$$hashKey": "object:9006"
+              },
+              {
+                "value": "BCC7117",
+                "displayName": "BCC7117",
+                "$$hashKey": "object:9007"
+              },
+              {
+                "value": "BCC7140",
+                "displayName": "BCC7140",
+                "$$hashKey": "object:9008"
+              },
+              {
+                "value": "BCC7437",
+                "displayName": "BCC7437",
+                "$$hashKey": "object:9009"
+              },
+              {
+                "value": "BCC7440",
+                "displayName": "BCC7440",
+                "$$hashKey": "object:9010"
+              },
+              {
+                "value": "BCC7801",
+                "displayName": "BCC7801",
+                "$$hashKey": "object:9011"
+              },
+              {
+                "value": "BCC8120",
+                "displayName": "BCC8120",
+                "$$hashKey": "object:9012"
+              },
+              {
+                "value": "BCC8222",
+                "displayName": "BCC8222",
+                "$$hashKey": "object:9013"
+              },
+              {
+                "value": "BCC8322",
+                "displayName": "BCC8322",
+                "$$hashKey": "object:9014"
+              },
+              {
+                "value": "BCN8220",
+                "displayName": "BCN8220",
+                "$$hashKey": "object:9015"
+              },
+              {
+                "value": "BRC3510",
+                "displayName": "BRC3510",
+                "$$hashKey": "object:9016"
+              },
+              {
+                "value": "COL2764",
+                "displayName": "COL2764",
+                "$$hashKey": "object:9017"
+              },
+              {
+                "value": "COL3200",
+                "displayName": "COL3200",
+                "$$hashKey": "object:9018"
+              },
+              {
+                "value": "COL8190",
+                "displayName": "COL8190",
+                "$$hashKey": "object:9019"
+              },
+              {
+                "value": "COL8192",
+                "displayName": "COL8192",
+                "$$hashKey": "object:9020"
+              },
+              {
+                "value": "HLC7110",
+                "displayName": "HLC7110",
+                "$$hashKey": "object:9021"
+              },
+              {
+                "value": "ILN2328",
+                "displayName": "ILN2328",
+                "$$hashKey": "object:9022"
+              },
+              {
+                "value": "ILN7110",
+                "displayName": "ILN7110",
+                "$$hashKey": "object:9023"
+              },
+              {
+                "value": "ILN8220",
+                "displayName": "ILN8220",
+                "$$hashKey": "object:9024"
+              },
+              {
+                "value": "IQT9416",
+                "displayName": "IQT9416",
+                "$$hashKey": "object:9025"
+              },
+              {
+                "value": "IQT9417",
+                "displayName": "IQT9417",
+                "$$hashKey": "object:9026"
+              },
+              {
+                "value": "MTA6160",
+                "displayName": "MTA6160",
+                "$$hashKey": "object:9027"
+              },
+              {
+                "value": "MTA8320",
+                "displayName": "MTA8320",
+                "$$hashKey": "object:9028"
+              },
+              {
+                "value": "PIL0300",
+                "displayName": "PIL0300",
+                "$$hashKey": "object:9029"
+              },
+              {
+                "value": "PIL8120",
+                "displayName": "PIL8120",
+                "$$hashKey": "object:9030"
+              },
+              {
+                "value": "REH3422",
+                "displayName": "REH3422",
+                "$$hashKey": "object:9031"
+              },
+              {
+                "value": "REH7110",
+                "displayName": "REH7110",
+                "$$hashKey": "object:9032"
+              },
+              {
+                "value": "REH7120",
+                "displayName": "REH7120",
+                "$$hashKey": "object:9033"
+              },
+              {
+                "value": "REV0300",
+                "displayName": "REV0300",
+                "$$hashKey": "object:9034"
+              },
+              {
+                "value": "REV0416",
+                "displayName": "REV0416",
+                "$$hashKey": "object:9035"
+              },
+              {
+                "value": "REV1300",
+                "displayName": "REV1300",
+                "$$hashKey": "object:9036"
+              },
+              {
+                "value": "REV3421",
+                "displayName": "REV3421",
+                "$$hashKey": "object:9037"
+              },
+              {
+                "value": "REV3423",
+                "displayName": "REV3423",
+                "$$hashKey": "object:9038"
+              },
+              {
+                "value": "REV5620",
+                "displayName": "REV5620",
+                "$$hashKey": "object:9039"
+              },
+              {
+                "value": "REV7440",
+                "displayName": "REV7440",
+                "$$hashKey": "object:9040"
+              },
+              {
+                "value": "REV8220",
+                "displayName": "REV8220",
+                "$$hashKey": "object:9041"
+              },
+              {
+                "value": "REV8320",
+                "displayName": "REV8320",
+                "$$hashKey": "object:9042"
+              },
+              {
+                "value": "RTR0438",
+                "displayName": "RTR0438",
+                "$$hashKey": "object:9043"
+              },
+              {
+                "value": "RTR7110",
+                "displayName": "RTR7110",
+                "$$hashKey": "object:9044"
+              },
+              {
+                "value": "RTR8120",
+                "displayName": "RTR8120",
+                "$$hashKey": "object:9045"
+              },
+              {
+                "value": "STU0802",
+                "displayName": "STU0802",
+                "$$hashKey": "object:9046"
+              },
+              {
+                "value": "STU2007",
+                "displayName": "STU2007",
+                "$$hashKey": "object:9047"
+              },
+              {
+                "value": "STU7110",
+                "displayName": "STU7110",
+                "$$hashKey": "object:9048"
+              },
+              {
+                "value": "STU8220",
+                "displayName": "STU8220",
+                "$$hashKey": "object:9049"
+              },
+              {
+                "value": "_train_test",
+                "displayName": "_train_test",
+                "$$hashKey": "object:9050"
+              },
+              {
+                "value": "ALL0206_dummy",
+                "displayName": "ALL0206_dummy",
+                "$$hashKey": "object:9051"
+              },
+              {
+                "value": "BCC3456_dummy",
+                "displayName": "BCC3456_dummy",
+                "$$hashKey": "object:9052"
+              },
+              {
+                "value": "ALL0448_dummy",
+                "displayName": "ALL0448_dummy",
+                "$$hashKey": "object:9053"
+              },
+              {
+                "value": "ALL5072_dummy",
+                "displayName": "ALL5072_dummy",
+                "$$hashKey": "object:9054"
+              },
+              {
+                "value": "ALL2005_dummy",
+                "displayName": "ALL2005_dummy",
+                "$$hashKey": "object:9055"
+              },
+              {
+                "value": "ALL2327_dummy",
+                "displayName": "ALL2327_dummy",
+                "$$hashKey": "object:9056"
+              },
+              {
+                "value": "ALL2326_dummy",
+                "displayName": "ALL2326_dummy",
+                "$$hashKey": "object:9057"
+              },
+              {
+                "value": "ALL6250_dummy",
+                "displayName": "ALL6250_dummy",
+                "$$hashKey": "object:9058"
+              },
+              {
+                "value": "ALL2420_dummy",
+                "displayName": "ALL2420_dummy",
+                "$$hashKey": "object:9059"
+              },
+              {
+                "value": "HLC7110_dummy",
+                "displayName": "HLC7110_dummy",
+                "$$hashKey": "object:9060"
+              },
+              {
+                "value": "ALL8370_dummy",
+                "displayName": "ALL8370_dummy",
+                "$$hashKey": "object:9061"
+              },
+              {
+                "value": "ALL0437_dummy",
+                "displayName": "ALL0437_dummy",
+                "$$hashKey": "object:9062"
+              },
+              {
+                "value": "ALL0436_dummy",
+                "displayName": "ALL0436_dummy",
+                "$$hashKey": "object:9063"
+              },
+              {
+                "value": "RTR7110_dummy",
+                "displayName": "RTR7110_dummy",
+                "$$hashKey": "object:9064"
+              },
+              {
+                "value": "RTR8120_dummy",
+                "displayName": "RTR8120_dummy",
+                "$$hashKey": "object:9065"
+              },
+              {
+                "value": "ALL5361_dummy",
+                "displayName": "ALL5361_dummy",
+                "$$hashKey": "object:9066"
+              },
+              {
+                "value": "BCA8370_dummy",
+                "displayName": "BCA8370_dummy",
+                "$$hashKey": "object:9067"
+              },
+              {
+                "value": "ALL8164_dummy",
+                "displayName": "ALL8164_dummy",
+                "$$hashKey": "object:9068"
+              },
+              {
+                "value": "BCC7140_dummy",
+                "displayName": "BCC7140_dummy",
+                "$$hashKey": "object:9069"
+              },
+              {
+                "value": "REV8320_dummy",
+                "displayName": "REV8320_dummy",
+                "$$hashKey": "object:9070"
+              },
+              {
+                "value": "ALL8560_dummy",
+                "displayName": "ALL8560_dummy",
+                "$$hashKey": "object:9071"
+              },
+              {
+                "value": "REH3422_dummy",
+                "displayName": "REH3422_dummy",
+                "$$hashKey": "object:9072"
+              },
+              {
+                "value": "COL8192_dummy",
+                "displayName": "COL8192_dummy",
+                "$$hashKey": "object:9073"
+              },
+              {
+                "value": "STU7110_dummy",
+                "displayName": "STU7110_dummy",
+                "$$hashKey": "object:9074"
+              },
+              {
+                "value": "COL8190_dummy",
+                "displayName": "COL8190_dummy",
+                "$$hashKey": "object:9075"
+              },
+              {
+                "value": "BCN8220_dummy",
+                "displayName": "BCN8220_dummy",
+                "$$hashKey": "object:9076"
+              },
+              {
+                "value": "ALL2840_dummy",
+                "displayName": "ALL2840_dummy",
+                "$$hashKey": "object:9077"
+              },
+              {
+                "value": "BCA0416_dummy",
+                "displayName": "BCA0416_dummy",
+                "$$hashKey": "object:9078"
+              },
+              {
+                "value": "ALM2380_dummy",
+                "displayName": "ALM2380_dummy",
+                "$$hashKey": "object:9079"
+              },
+              {
+                "value": "STU8220_dummy",
+                "displayName": "STU8220_dummy",
+                "$$hashKey": "object:9080"
+              },
+              {
+                "value": "REV3423_dummy",
+                "displayName": "REV3423_dummy",
+                "$$hashKey": "object:9081"
+              },
+              {
+                "value": "REV3421_dummy",
+                "displayName": "REV3421_dummy",
+                "$$hashKey": "object:9082"
+              },
+              {
+                "value": "ALL2458_dummy",
+                "displayName": "ALL2458_dummy",
+                "$$hashKey": "object:9083"
+              },
+              {
+                "value": "REV5620_dummy",
+                "displayName": "REV5620_dummy",
+                "$$hashKey": "object:9084"
+              },
+              {
+                "value": "ALL7116_dummy",
+                "displayName": "ALL7116_dummy",
+                "$$hashKey": "object:9085"
+              },
+              {
+                "value": "BCC8222_dummy",
+                "displayName": "BCC8222_dummy",
+                "$$hashKey": "object:9086"
+              },
+              {
+                "value": "ILN8220_dummy",
+                "displayName": "ILN8220_dummy",
+                "$$hashKey": "object:9087"
+              },
+              {
+                "value": "ALL6230_dummy",
+                "displayName": "ALL6230_dummy",
+                "$$hashKey": "object:9088"
+              },
+              {
+                "value": "REH7120_dummy",
+                "displayName": "REH7120_dummy",
+                "$$hashKey": "object:9089"
+              },
+              {
+                "value": "ALL1401_dummy",
+                "displayName": "ALL1401_dummy",
+                "$$hashKey": "object:9090"
+              },
+              {
+                "value": "BCC3421_dummy",
+                "displayName": "BCC3421_dummy",
+                "$$hashKey": "object:9091"
+              },
+              {
+                "value": "REV0300_dummy",
+                "displayName": "REV0300_dummy",
+                "$$hashKey": "object:9092"
+              },
+              {
+                "value": "ALL2351_dummy",
+                "displayName": "ALL2351_dummy",
+                "$$hashKey": "object:9093"
+              },
+              {
+                "value": "ALL7333_dummy",
+                "displayName": "ALL7333_dummy",
+                "$$hashKey": "object:9094"
+              },
+              {
+                "value": "BCC7801_dummy",
+                "displayName": "BCC7801_dummy",
+                "$$hashKey": "object:9095"
+              },
+              {
+                "value": "MTA6160_dummy",
+                "displayName": "MTA6160_dummy",
+                "$$hashKey": "object:9096"
+              },
+              {
+                "value": "REV1300_dummy",
+                "displayName": "REV1300_dummy",
+                "$$hashKey": "object:9097"
+              },
+              {
+                "value": "REV7440_dummy",
+                "displayName": "REV7440_dummy",
+                "$$hashKey": "object:9098"
+              },
+              {
+                "value": "PIL0300_dummy",
+                "displayName": "PIL0300_dummy",
+                "$$hashKey": "object:9099"
+              },
+              {
+                "value": "ALL8120_dummy",
+                "displayName": "ALL8120_dummy",
+                "$$hashKey": "object:9100"
+              },
+              {
+                "value": "BCC6200_dummy",
+                "displayName": "BCC6200_dummy",
+                "$$hashKey": "object:9101"
+              },
+              {
+                "value": "ALL7937_dummy",
+                "displayName": "ALL7937_dummy",
+                "$$hashKey": "object:9102"
+              },
+              {
+                "value": "ALL7936_dummy",
+                "displayName": "ALL7936_dummy",
+                "$$hashKey": "object:9103"
+              },
+              {
+                "value": "ALL8323_dummy",
+                "displayName": "ALL8323_dummy",
+                "$$hashKey": "object:9104"
+              },
+              {
+                "value": "ALL7938_dummy",
+                "displayName": "ALL7938_dummy",
+                "$$hashKey": "object:9105"
+              },
+              {
+                "value": "ALL8325_dummy",
+                "displayName": "ALL8325_dummy",
+                "$$hashKey": "object:9106"
+              },
+              {
+                "value": "ILN7110_dummy",
+                "displayName": "ILN7110_dummy",
+                "$$hashKey": "object:9107"
+              },
+              {
+                "value": "RTR0438_dummy",
+                "displayName": "RTR0438_dummy",
+                "$$hashKey": "object:9108"
+              },
+              {
+                "value": "BCC8322_dummy",
+                "displayName": "BCC8322_dummy",
+                "$$hashKey": "object:9109"
+              },
+              {
+                "value": "AUT7110_dummy",
+                "displayName": "AUT7110_dummy",
+                "$$hashKey": "object:9110"
+              },
+              {
+                "value": "MTA8320_dummy",
+                "displayName": "MTA8320_dummy",
+                "$$hashKey": "object:9111"
+              },
+              {
+                "value": "PIL8120_dummy",
+                "displayName": "PIL8120_dummy",
+                "$$hashKey": "object:9112"
+              },
+              {
+                "value": "ALL2875_dummy",
+                "displayName": "ALL2875_dummy",
+                "$$hashKey": "object:9113"
+              },
+              {
+                "value": "REV8220_dummy",
+                "displayName": "REV8220_dummy",
+                "$$hashKey": "object:9114"
+              },
+              {
+                "value": "BRC3510_dummy",
+                "displayName": "BRC3510_dummy",
+                "$$hashKey": "object:9115"
+              },
+              {
+                "value": "REV0416_dummy",
+                "displayName": "REV0416_dummy",
+                "$$hashKey": "object:9116"
+              },
+              {
+                "value": "ILN2328_dummy",
+                "displayName": "ILN2328_dummy",
+                "$$hashKey": "object:9117"
+              },
+              {
+                "value": "ALL0300_dummy",
+                "displayName": "ALL0300_dummy",
+                "$$hashKey": "object:9118"
+              },
+              {
+                "value": "ALM6270_dummy",
+                "displayName": "ALM6270_dummy",
+                "$$hashKey": "object:9119"
+              },
+              {
+                "value": "ALL1300_dummy",
+                "displayName": "ALL1300_dummy",
+                "$$hashKey": "object:9120"
+              },
+              {
+                "value": "BCC7117_dummy",
+                "displayName": "BCC7117_dummy",
+                "$$hashKey": "object:9121"
+              },
+              {
+                "value": "BCC7110_dummy",
+                "displayName": "BCC7110_dummy",
+                "$$hashKey": "object:9122"
+              },
+              {
+                "value": "BCC7440_dummy",
+                "displayName": "BCC7440_dummy",
+                "$$hashKey": "object:9123"
+              },
+              {
+                "value": "ALL7516_dummy",
+                "displayName": "ALL7516_dummy",
+                "$$hashKey": "object:9124"
+              },
+              {
+                "value": "ALL6901_dummy",
+                "displayName": "ALL6901_dummy",
+                "$$hashKey": "object:9125"
+              },
+              {
+                "value": "ALL6900_dummy",
+                "displayName": "ALL6900_dummy",
+                "$$hashKey": "object:9126"
+              },
+              {
+                "value": "ALL1380_dummy",
+                "displayName": "ALL1380_dummy",
+                "$$hashKey": "object:9127"
+              },
+              {
+                "value": "ALL8320_dummy",
+                "displayName": "ALL8320_dummy",
+                "$$hashKey": "object:9128"
+              },
+              {
+                "value": "ALM2350_dummy",
+                "displayName": "ALM2350_dummy",
+                "$$hashKey": "object:9129"
+              },
+              {
+                "value": "BCC8120_dummy",
+                "displayName": "BCC8120_dummy",
+                "$$hashKey": "object:9130"
+              },
+              {
+                "value": "BCA0300_dummy",
+                "displayName": "BCA0300_dummy",
+                "$$hashKey": "object:9131"
+              },
+              {
+                "value": "BCA7211_dummy",
+                "displayName": "BCA7211_dummy",
+                "$$hashKey": "object:9132"
+              },
+              {
+                "value": "ALL7440_dummy",
+                "displayName": "ALL7440_dummy",
+                "$$hashKey": "object:9133"
+              },
+              {
+                "value": "ALL7110_dummy",
+                "displayName": "ALL7110_dummy",
+                "$$hashKey": "object:9134"
+              },
+              {
+                "value": "ALL7334_dummy",
+                "displayName": "ALL7334_dummy",
+                "$$hashKey": "object:9135"
+              },
+              {
+                "value": "ALL9210_dummy",
+                "displayName": "ALL9210_dummy",
+                "$$hashKey": "object:9136"
+              },
+              {
+                "value": "ALL0316_dummy",
+                "displayName": "ALL0316_dummy",
+                "$$hashKey": "object:9137"
+              },
+              {
+                "value": "ALL8020_dummy",
+                "displayName": "ALL8020_dummy",
+                "$$hashKey": "object:9138"
+              },
+              {
+                "value": "ALM6289_dummy",
+                "displayName": "ALM6289_dummy",
+                "$$hashKey": "object:9139"
+              },
+              {
+                "value": "BCC7437_dummy",
+                "displayName": "BCC7437_dummy",
+                "$$hashKey": "object:9140"
+              },
+              {
+                "value": "ALM6200_dummy",
+                "displayName": "ALM6200_dummy",
+                "$$hashKey": "object:9141"
+              },
+              {
+                "value": "ALL1370_dummy",
+                "displayName": "ALL1370_dummy",
+                "$$hashKey": "object:9142"
+              },
+              {
+                "value": "ALL9220_dummy",
+                "displayName": "ALL9220_dummy",
+                "$$hashKey": "object:9143"
+              },
+              {
+                "value": "ALL7348_dummy",
+                "displayName": "ALL7348_dummy",
+                "$$hashKey": "object:9144"
+              },
+              {
+                "value": "STU0802_dummy",
+                "displayName": "STU0802_dummy",
+                "$$hashKey": "object:9145"
+              },
+              {
+                "value": "ALL7340_dummy",
+                "displayName": "ALL7340_dummy",
+                "$$hashKey": "object:9146"
+              },
+              {
+                "value": "BCC5620_dummy",
+                "displayName": "BCC5620_dummy",
+                "$$hashKey": "object:9147"
+              },
+              {
+                "value": "ALL8152_dummy",
+                "displayName": "ALL8152_dummy",
+                "$$hashKey": "object:9148"
+              },
+              {
+                "value": "ALM2002_dummy",
+                "displayName": "ALM2002_dummy",
+                "$$hashKey": "object:9149"
+              },
+              {
+                "value": "ALL7517_dummy",
+                "displayName": "ALL7517_dummy",
+                "$$hashKey": "object:9150"
+              },
+              {
+                "value": "ALL1360_dummy",
+                "displayName": "ALL1360_dummy",
+                "$$hashKey": "object:9151"
+              },
+              {
+                "value": "REH7110_dummy",
+                "displayName": "REH7110_dummy",
+                "$$hashKey": "object:9152"
+              },
+              {
+                "value": "ALL8220_dummy",
+                "displayName": "ALL8220_dummy",
+                "$$hashKey": "object:9153"
+              },
+              {
+                "value": "ALL8221_dummy",
+                "displayName": "ALL8221_dummy",
+                "$$hashKey": "object:9154"
+              },
+              {
+                "value": "ALM6160_dummy",
+                "displayName": "ALM6160_dummy",
+                "$$hashKey": "object:9155"
+              },
+              {
+                "value": "STU2007_dummy",
+                "displayName": "STU2007_dummy",
+                "$$hashKey": "object:9156"
+              },
+              {
+                "value": "AGB",
+                "displayName": "AGB",
+                "$$hashKey": "object:9157"
+              },
+              {
+                "value": "final_weight",
+                "displayName": "final_weight",
+                "$$hashKey": "object:9158"
+              }
+            ],
+            "hidden": false,
+            "$$hashKey": "object:8930"
+          }
+        }
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113178_727373852",
+      "id": "20180330-035532_1658622702",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7753"
+    },
+    {
+      "title": "Select sample weight column name",
+      "text": "%python\nwt_col_name = z.select(\"\",[('None', 'None')] + [(x,x) for x in df.columns.values])\ncolumn_names = list(df.columns.values)\n\ntest_w = None\ntrain_w = None\nif wt_col_name != 'None':\n    weight = [wt_col_name]\n    train_w = df[weight].as_matrix()\n    test_w = test_df[weight].as_matrix().ravel()\n    column_names.remove(wt_col_name)\n\ncolumn_names.remove(target_col_name)\n\nx = df[column_names].as_matrix()\ny = df[target].as_matrix()\n\ntrain_x = x\ntrain_y = y\nfeature_names = column_names\n\ntest_df = pd.read_csv(test_file_loc)\ntest_x = test_df[column_names].as_matrix()\ntest_y = test_df[target].as_matrix()\n\nimport xgboost as xgb\ndtrain = xgb.DMatrix(train_x, train_y, weight=train_w, feature_names=feature_names)\ndtest = xgb.DMatrix(test_x, test_y, weight=test_w, feature_names=feature_names)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "runOnSelectionChange": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "": "final_weight"
+        },
+        "forms": {
+          "": {
+            "name": "",
+            "displayName": "",
+            "type": "select",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "None",
+                "displayName": "None",
+                "$$hashKey": "object:9203"
+              },
+              {
+                "value": "archive",
+                "displayName": "archive",
+                "$$hashKey": "object:9204"
+              },
+              {
+                "value": "ALL0206",
+                "displayName": "ALL0206",
+                "$$hashKey": "object:9205"
+              },
+              {
+                "value": "ALL0300",
+                "displayName": "ALL0300",
+                "$$hashKey": "object:9206"
+              },
+              {
+                "value": "ALL0316",
+                "displayName": "ALL0316",
+                "$$hashKey": "object:9207"
+              },
+              {
+                "value": "ALL0436",
+                "displayName": "ALL0436",
+                "$$hashKey": "object:9208"
+              },
+              {
+                "value": "ALL0437",
+                "displayName": "ALL0437",
+                "$$hashKey": "object:9209"
+              },
+              {
+                "value": "ALL0448",
+                "displayName": "ALL0448",
+                "$$hashKey": "object:9210"
+              },
+              {
+                "value": "ALL1300",
+                "displayName": "ALL1300",
+                "$$hashKey": "object:9211"
+              },
+              {
+                "value": "ALL1360",
+                "displayName": "ALL1360",
+                "$$hashKey": "object:9212"
+              },
+              {
+                "value": "ALL1370",
+                "displayName": "ALL1370",
+                "$$hashKey": "object:9213"
+              },
+              {
+                "value": "ALL1380",
+                "displayName": "ALL1380",
+                "$$hashKey": "object:9214"
+              },
+              {
+                "value": "ALL1401",
+                "displayName": "ALL1401",
+                "$$hashKey": "object:9215"
+              },
+              {
+                "value": "ALL2005",
+                "displayName": "ALL2005",
+                "$$hashKey": "object:9216"
+              },
+              {
+                "value": "ALL2326",
+                "displayName": "ALL2326",
+                "$$hashKey": "object:9217"
+              },
+              {
+                "value": "ALL2327",
+                "displayName": "ALL2327",
+                "$$hashKey": "object:9218"
+              },
+              {
+                "value": "ALL2351",
+                "displayName": "ALL2351",
+                "$$hashKey": "object:9219"
+              },
+              {
+                "value": "ALL2420",
+                "displayName": "ALL2420",
+                "$$hashKey": "object:9220"
+              },
+              {
+                "value": "ALL2458",
+                "displayName": "ALL2458",
+                "$$hashKey": "object:9221"
+              },
+              {
+                "value": "ALL2840",
+                "displayName": "ALL2840",
+                "$$hashKey": "object:9222"
+              },
+              {
+                "value": "ALL2875",
+                "displayName": "ALL2875",
+                "$$hashKey": "object:9223"
+              },
+              {
+                "value": "ALL5072",
+                "displayName": "ALL5072",
+                "$$hashKey": "object:9224"
+              },
+              {
+                "value": "ALL5361",
+                "displayName": "ALL5361",
+                "$$hashKey": "object:9225"
+              },
+              {
+                "value": "ALL6230",
+                "displayName": "ALL6230",
+                "$$hashKey": "object:9226"
+              },
+              {
+                "value": "ALL6250",
+                "displayName": "ALL6250",
+                "$$hashKey": "object:9227"
+              },
+              {
+                "value": "ALL6900",
+                "displayName": "ALL6900",
+                "$$hashKey": "object:9228"
+              },
+              {
+                "value": "ALL6901",
+                "displayName": "ALL6901",
+                "$$hashKey": "object:9229"
+              },
+              {
+                "value": "ALL7110",
+                "displayName": "ALL7110",
+                "$$hashKey": "object:9230"
+              },
+              {
+                "value": "ALL7116",
+                "displayName": "ALL7116",
+                "$$hashKey": "object:9231"
+              },
+              {
+                "value": "ALL7333",
+                "displayName": "ALL7333",
+                "$$hashKey": "object:9232"
+              },
+              {
+                "value": "ALL7334",
+                "displayName": "ALL7334",
+                "$$hashKey": "object:9233"
+              },
+              {
+                "value": "ALL7340",
+                "displayName": "ALL7340",
+                "$$hashKey": "object:9234"
+              },
+              {
+                "value": "ALL7348",
+                "displayName": "ALL7348",
+                "$$hashKey": "object:9235"
+              },
+              {
+                "value": "ALL7440",
+                "displayName": "ALL7440",
+                "$$hashKey": "object:9236"
+              },
+              {
+                "value": "ALL7516",
+                "displayName": "ALL7516",
+                "$$hashKey": "object:9237"
+              },
+              {
+                "value": "ALL7517",
+                "displayName": "ALL7517",
+                "$$hashKey": "object:9238"
+              },
+              {
+                "value": "ALL7936",
+                "displayName": "ALL7936",
+                "$$hashKey": "object:9239"
+              },
+              {
+                "value": "ALL7937",
+                "displayName": "ALL7937",
+                "$$hashKey": "object:9240"
+              },
+              {
+                "value": "ALL7938",
+                "displayName": "ALL7938",
+                "$$hashKey": "object:9241"
+              },
+              {
+                "value": "ALL8020",
+                "displayName": "ALL8020",
+                "$$hashKey": "object:9242"
+              },
+              {
+                "value": "ALL8120",
+                "displayName": "ALL8120",
+                "$$hashKey": "object:9243"
+              },
+              {
+                "value": "ALL8152",
+                "displayName": "ALL8152",
+                "$$hashKey": "object:9244"
+              },
+              {
+                "value": "ALL8164",
+                "displayName": "ALL8164",
+                "$$hashKey": "object:9245"
+              },
+              {
+                "value": "ALL8220",
+                "displayName": "ALL8220",
+                "$$hashKey": "object:9246"
+              },
+              {
+                "value": "ALL8221",
+                "displayName": "ALL8221",
+                "$$hashKey": "object:9247"
+              },
+              {
+                "value": "ALL8320",
+                "displayName": "ALL8320",
+                "$$hashKey": "object:9248"
+              },
+              {
+                "value": "ALL8323",
+                "displayName": "ALL8323",
+                "$$hashKey": "object:9249"
+              },
+              {
+                "value": "ALL8325",
+                "displayName": "ALL8325",
+                "$$hashKey": "object:9250"
+              },
+              {
+                "value": "ALL8370",
+                "displayName": "ALL8370",
+                "$$hashKey": "object:9251"
+              },
+              {
+                "value": "ALL8560",
+                "displayName": "ALL8560",
+                "$$hashKey": "object:9252"
+              },
+              {
+                "value": "ALL9110",
+                "displayName": "ALL9110",
+                "$$hashKey": "object:9253"
+              },
+              {
+                "value": "ALL9210",
+                "displayName": "ALL9210",
+                "$$hashKey": "object:9254"
+              },
+              {
+                "value": "ALL9220",
+                "displayName": "ALL9220",
+                "$$hashKey": "object:9255"
+              },
+              {
+                "value": "ALM2002",
+                "displayName": "ALM2002",
+                "$$hashKey": "object:9256"
+              },
+              {
+                "value": "ALM2350",
+                "displayName": "ALM2350",
+                "$$hashKey": "object:9257"
+              },
+              {
+                "value": "ALM2380",
+                "displayName": "ALM2380",
+                "$$hashKey": "object:9258"
+              },
+              {
+                "value": "ALM6160",
+                "displayName": "ALM6160",
+                "$$hashKey": "object:9259"
+              },
+              {
+                "value": "ALM6200",
+                "displayName": "ALM6200",
+                "$$hashKey": "object:9260"
+              },
+              {
+                "value": "ALM6270",
+                "displayName": "ALM6270",
+                "$$hashKey": "object:9261"
+              },
+              {
+                "value": "ALM6289",
+                "displayName": "ALM6289",
+                "$$hashKey": "object:9262"
+              },
+              {
+                "value": "AUT7110",
+                "displayName": "AUT7110",
+                "$$hashKey": "object:9263"
+              },
+              {
+                "value": "BCA0300",
+                "displayName": "BCA0300",
+                "$$hashKey": "object:9264"
+              },
+              {
+                "value": "BCA0416",
+                "displayName": "BCA0416",
+                "$$hashKey": "object:9265"
+              },
+              {
+                "value": "BCA7211",
+                "displayName": "BCA7211",
+                "$$hashKey": "object:9266"
+              },
+              {
+                "value": "BCA8370",
+                "displayName": "BCA8370",
+                "$$hashKey": "object:9267"
+              },
+              {
+                "value": "BCC3421",
+                "displayName": "BCC3421",
+                "$$hashKey": "object:9268"
+              },
+              {
+                "value": "BCC3456",
+                "displayName": "BCC3456",
+                "$$hashKey": "object:9269"
+              },
+              {
+                "value": "BCC5620",
+                "displayName": "BCC5620",
+                "$$hashKey": "object:9270"
+              },
+              {
+                "value": "BCC6200",
+                "displayName": "BCC6200",
+                "$$hashKey": "object:9271"
+              },
+              {
+                "value": "BCC7110",
+                "displayName": "BCC7110",
+                "$$hashKey": "object:9272"
+              },
+              {
+                "value": "BCC7117",
+                "displayName": "BCC7117",
+                "$$hashKey": "object:9273"
+              },
+              {
+                "value": "BCC7140",
+                "displayName": "BCC7140",
+                "$$hashKey": "object:9274"
+              },
+              {
+                "value": "BCC7437",
+                "displayName": "BCC7437",
+                "$$hashKey": "object:9275"
+              },
+              {
+                "value": "BCC7440",
+                "displayName": "BCC7440",
+                "$$hashKey": "object:9276"
+              },
+              {
+                "value": "BCC7801",
+                "displayName": "BCC7801",
+                "$$hashKey": "object:9277"
+              },
+              {
+                "value": "BCC8120",
+                "displayName": "BCC8120",
+                "$$hashKey": "object:9278"
+              },
+              {
+                "value": "BCC8222",
+                "displayName": "BCC8222",
+                "$$hashKey": "object:9279"
+              },
+              {
+                "value": "BCC8322",
+                "displayName": "BCC8322",
+                "$$hashKey": "object:9280"
+              },
+              {
+                "value": "BCN8220",
+                "displayName": "BCN8220",
+                "$$hashKey": "object:9281"
+              },
+              {
+                "value": "BRC3510",
+                "displayName": "BRC3510",
+                "$$hashKey": "object:9282"
+              },
+              {
+                "value": "COL2764",
+                "displayName": "COL2764",
+                "$$hashKey": "object:9283"
+              },
+              {
+                "value": "COL3200",
+                "displayName": "COL3200",
+                "$$hashKey": "object:9284"
+              },
+              {
+                "value": "COL8190",
+                "displayName": "COL8190",
+                "$$hashKey": "object:9285"
+              },
+              {
+                "value": "COL8192",
+                "displayName": "COL8192",
+                "$$hashKey": "object:9286"
+              },
+              {
+                "value": "HLC7110",
+                "displayName": "HLC7110",
+                "$$hashKey": "object:9287"
+              },
+              {
+                "value": "ILN2328",
+                "displayName": "ILN2328",
+                "$$hashKey": "object:9288"
+              },
+              {
+                "value": "ILN7110",
+                "displayName": "ILN7110",
+                "$$hashKey": "object:9289"
+              },
+              {
+                "value": "ILN8220",
+                "displayName": "ILN8220",
+                "$$hashKey": "object:9290"
+              },
+              {
+                "value": "IQT9416",
+                "displayName": "IQT9416",
+                "$$hashKey": "object:9291"
+              },
+              {
+                "value": "IQT9417",
+                "displayName": "IQT9417",
+                "$$hashKey": "object:9292"
+              },
+              {
+                "value": "MTA6160",
+                "displayName": "MTA6160",
+                "$$hashKey": "object:9293"
+              },
+              {
+                "value": "MTA8320",
+                "displayName": "MTA8320",
+                "$$hashKey": "object:9294"
+              },
+              {
+                "value": "PIL0300",
+                "displayName": "PIL0300",
+                "$$hashKey": "object:9295"
+              },
+              {
+                "value": "PIL8120",
+                "displayName": "PIL8120",
+                "$$hashKey": "object:9296"
+              },
+              {
+                "value": "REH3422",
+                "displayName": "REH3422",
+                "$$hashKey": "object:9297"
+              },
+              {
+                "value": "REH7110",
+                "displayName": "REH7110",
+                "$$hashKey": "object:9298"
+              },
+              {
+                "value": "REH7120",
+                "displayName": "REH7120",
+                "$$hashKey": "object:9299"
+              },
+              {
+                "value": "REV0300",
+                "displayName": "REV0300",
+                "$$hashKey": "object:9300"
+              },
+              {
+                "value": "REV0416",
+                "displayName": "REV0416",
+                "$$hashKey": "object:9301"
+              },
+              {
+                "value": "REV1300",
+                "displayName": "REV1300",
+                "$$hashKey": "object:9302"
+              },
+              {
+                "value": "REV3421",
+                "displayName": "REV3421",
+                "$$hashKey": "object:9303"
+              },
+              {
+                "value": "REV3423",
+                "displayName": "REV3423",
+                "$$hashKey": "object:9304"
+              },
+              {
+                "value": "REV5620",
+                "displayName": "REV5620",
+                "$$hashKey": "object:9305"
+              },
+              {
+                "value": "REV7440",
+                "displayName": "REV7440",
+                "$$hashKey": "object:9306"
+              },
+              {
+                "value": "REV8220",
+                "displayName": "REV8220",
+                "$$hashKey": "object:9307"
+              },
+              {
+                "value": "REV8320",
+                "displayName": "REV8320",
+                "$$hashKey": "object:9308"
+              },
+              {
+                "value": "RTR0438",
+                "displayName": "RTR0438",
+                "$$hashKey": "object:9309"
+              },
+              {
+                "value": "RTR7110",
+                "displayName": "RTR7110",
+                "$$hashKey": "object:9310"
+              },
+              {
+                "value": "RTR8120",
+                "displayName": "RTR8120",
+                "$$hashKey": "object:9311"
+              },
+              {
+                "value": "STU0802",
+                "displayName": "STU0802",
+                "$$hashKey": "object:9312"
+              },
+              {
+                "value": "STU2007",
+                "displayName": "STU2007",
+                "$$hashKey": "object:9313"
+              },
+              {
+                "value": "STU7110",
+                "displayName": "STU7110",
+                "$$hashKey": "object:9314"
+              },
+              {
+                "value": "STU8220",
+                "displayName": "STU8220",
+                "$$hashKey": "object:9315"
+              },
+              {
+                "value": "_train_test",
+                "displayName": "_train_test",
+                "$$hashKey": "object:9316"
+              },
+              {
+                "value": "ALL0206_dummy",
+                "displayName": "ALL0206_dummy",
+                "$$hashKey": "object:9317"
+              },
+              {
+                "value": "BCC3456_dummy",
+                "displayName": "BCC3456_dummy",
+                "$$hashKey": "object:9318"
+              },
+              {
+                "value": "ALL0448_dummy",
+                "displayName": "ALL0448_dummy",
+                "$$hashKey": "object:9319"
+              },
+              {
+                "value": "ALL5072_dummy",
+                "displayName": "ALL5072_dummy",
+                "$$hashKey": "object:9320"
+              },
+              {
+                "value": "ALL2005_dummy",
+                "displayName": "ALL2005_dummy",
+                "$$hashKey": "object:9321"
+              },
+              {
+                "value": "ALL2327_dummy",
+                "displayName": "ALL2327_dummy",
+                "$$hashKey": "object:9322"
+              },
+              {
+                "value": "ALL2326_dummy",
+                "displayName": "ALL2326_dummy",
+                "$$hashKey": "object:9323"
+              },
+              {
+                "value": "ALL6250_dummy",
+                "displayName": "ALL6250_dummy",
+                "$$hashKey": "object:9324"
+              },
+              {
+                "value": "ALL2420_dummy",
+                "displayName": "ALL2420_dummy",
+                "$$hashKey": "object:9325"
+              },
+              {
+                "value": "HLC7110_dummy",
+                "displayName": "HLC7110_dummy",
+                "$$hashKey": "object:9326"
+              },
+              {
+                "value": "ALL8370_dummy",
+                "displayName": "ALL8370_dummy",
+                "$$hashKey": "object:9327"
+              },
+              {
+                "value": "ALL0437_dummy",
+                "displayName": "ALL0437_dummy",
+                "$$hashKey": "object:9328"
+              },
+              {
+                "value": "ALL0436_dummy",
+                "displayName": "ALL0436_dummy",
+                "$$hashKey": "object:9329"
+              },
+              {
+                "value": "RTR7110_dummy",
+                "displayName": "RTR7110_dummy",
+                "$$hashKey": "object:9330"
+              },
+              {
+                "value": "RTR8120_dummy",
+                "displayName": "RTR8120_dummy",
+                "$$hashKey": "object:9331"
+              },
+              {
+                "value": "ALL5361_dummy",
+                "displayName": "ALL5361_dummy",
+                "$$hashKey": "object:9332"
+              },
+              {
+                "value": "BCA8370_dummy",
+                "displayName": "BCA8370_dummy",
+                "$$hashKey": "object:9333"
+              },
+              {
+                "value": "ALL8164_dummy",
+                "displayName": "ALL8164_dummy",
+                "$$hashKey": "object:9334"
+              },
+              {
+                "value": "BCC7140_dummy",
+                "displayName": "BCC7140_dummy",
+                "$$hashKey": "object:9335"
+              },
+              {
+                "value": "REV8320_dummy",
+                "displayName": "REV8320_dummy",
+                "$$hashKey": "object:9336"
+              },
+              {
+                "value": "ALL8560_dummy",
+                "displayName": "ALL8560_dummy",
+                "$$hashKey": "object:9337"
+              },
+              {
+                "value": "REH3422_dummy",
+                "displayName": "REH3422_dummy",
+                "$$hashKey": "object:9338"
+              },
+              {
+                "value": "COL8192_dummy",
+                "displayName": "COL8192_dummy",
+                "$$hashKey": "object:9339"
+              },
+              {
+                "value": "STU7110_dummy",
+                "displayName": "STU7110_dummy",
+                "$$hashKey": "object:9340"
+              },
+              {
+                "value": "COL8190_dummy",
+                "displayName": "COL8190_dummy",
+                "$$hashKey": "object:9341"
+              },
+              {
+                "value": "BCN8220_dummy",
+                "displayName": "BCN8220_dummy",
+                "$$hashKey": "object:9342"
+              },
+              {
+                "value": "ALL2840_dummy",
+                "displayName": "ALL2840_dummy",
+                "$$hashKey": "object:9343"
+              },
+              {
+                "value": "BCA0416_dummy",
+                "displayName": "BCA0416_dummy",
+                "$$hashKey": "object:9344"
+              },
+              {
+                "value": "ALM2380_dummy",
+                "displayName": "ALM2380_dummy",
+                "$$hashKey": "object:9345"
+              },
+              {
+                "value": "STU8220_dummy",
+                "displayName": "STU8220_dummy",
+                "$$hashKey": "object:9346"
+              },
+              {
+                "value": "REV3423_dummy",
+                "displayName": "REV3423_dummy",
+                "$$hashKey": "object:9347"
+              },
+              {
+                "value": "REV3421_dummy",
+                "displayName": "REV3421_dummy",
+                "$$hashKey": "object:9348"
+              },
+              {
+                "value": "ALL2458_dummy",
+                "displayName": "ALL2458_dummy",
+                "$$hashKey": "object:9349"
+              },
+              {
+                "value": "REV5620_dummy",
+                "displayName": "REV5620_dummy",
+                "$$hashKey": "object:9350"
+              },
+              {
+                "value": "ALL7116_dummy",
+                "displayName": "ALL7116_dummy",
+                "$$hashKey": "object:9351"
+              },
+              {
+                "value": "BCC8222_dummy",
+                "displayName": "BCC8222_dummy",
+                "$$hashKey": "object:9352"
+              },
+              {
+                "value": "ILN8220_dummy",
+                "displayName": "ILN8220_dummy",
+                "$$hashKey": "object:9353"
+              },
+              {
+                "value": "ALL6230_dummy",
+                "displayName": "ALL6230_dummy",
+                "$$hashKey": "object:9354"
+              },
+              {
+                "value": "REH7120_dummy",
+                "displayName": "REH7120_dummy",
+                "$$hashKey": "object:9355"
+              },
+              {
+                "value": "ALL1401_dummy",
+                "displayName": "ALL1401_dummy",
+                "$$hashKey": "object:9356"
+              },
+              {
+                "value": "BCC3421_dummy",
+                "displayName": "BCC3421_dummy",
+                "$$hashKey": "object:9357"
+              },
+              {
+                "value": "REV0300_dummy",
+                "displayName": "REV0300_dummy",
+                "$$hashKey": "object:9358"
+              },
+              {
+                "value": "ALL2351_dummy",
+                "displayName": "ALL2351_dummy",
+                "$$hashKey": "object:9359"
+              },
+              {
+                "value": "ALL7333_dummy",
+                "displayName": "ALL7333_dummy",
+                "$$hashKey": "object:9360"
+              },
+              {
+                "value": "BCC7801_dummy",
+                "displayName": "BCC7801_dummy",
+                "$$hashKey": "object:9361"
+              },
+              {
+                "value": "MTA6160_dummy",
+                "displayName": "MTA6160_dummy",
+                "$$hashKey": "object:9362"
+              },
+              {
+                "value": "REV1300_dummy",
+                "displayName": "REV1300_dummy",
+                "$$hashKey": "object:9363"
+              },
+              {
+                "value": "REV7440_dummy",
+                "displayName": "REV7440_dummy",
+                "$$hashKey": "object:9364"
+              },
+              {
+                "value": "PIL0300_dummy",
+                "displayName": "PIL0300_dummy",
+                "$$hashKey": "object:9365"
+              },
+              {
+                "value": "ALL8120_dummy",
+                "displayName": "ALL8120_dummy",
+                "$$hashKey": "object:9366"
+              },
+              {
+                "value": "BCC6200_dummy",
+                "displayName": "BCC6200_dummy",
+                "$$hashKey": "object:9367"
+              },
+              {
+                "value": "ALL7937_dummy",
+                "displayName": "ALL7937_dummy",
+                "$$hashKey": "object:9368"
+              },
+              {
+                "value": "ALL7936_dummy",
+                "displayName": "ALL7936_dummy",
+                "$$hashKey": "object:9369"
+              },
+              {
+                "value": "ALL8323_dummy",
+                "displayName": "ALL8323_dummy",
+                "$$hashKey": "object:9370"
+              },
+              {
+                "value": "ALL7938_dummy",
+                "displayName": "ALL7938_dummy",
+                "$$hashKey": "object:9371"
+              },
+              {
+                "value": "ALL8325_dummy",
+                "displayName": "ALL8325_dummy",
+                "$$hashKey": "object:9372"
+              },
+              {
+                "value": "ILN7110_dummy",
+                "displayName": "ILN7110_dummy",
+                "$$hashKey": "object:9373"
+              },
+              {
+                "value": "RTR0438_dummy",
+                "displayName": "RTR0438_dummy",
+                "$$hashKey": "object:9374"
+              },
+              {
+                "value": "BCC8322_dummy",
+                "displayName": "BCC8322_dummy",
+                "$$hashKey": "object:9375"
+              },
+              {
+                "value": "AUT7110_dummy",
+                "displayName": "AUT7110_dummy",
+                "$$hashKey": "object:9376"
+              },
+              {
+                "value": "MTA8320_dummy",
+                "displayName": "MTA8320_dummy",
+                "$$hashKey": "object:9377"
+              },
+              {
+                "value": "PIL8120_dummy",
+                "displayName": "PIL8120_dummy",
+                "$$hashKey": "object:9378"
+              },
+              {
+                "value": "ALL2875_dummy",
+                "displayName": "ALL2875_dummy",
+                "$$hashKey": "object:9379"
+              },
+              {
+                "value": "REV8220_dummy",
+                "displayName": "REV8220_dummy",
+                "$$hashKey": "object:9380"
+              },
+              {
+                "value": "BRC3510_dummy",
+                "displayName": "BRC3510_dummy",
+                "$$hashKey": "object:9381"
+              },
+              {
+                "value": "REV0416_dummy",
+                "displayName": "REV0416_dummy",
+                "$$hashKey": "object:9382"
+              },
+              {
+                "value": "ILN2328_dummy",
+                "displayName": "ILN2328_dummy",
+                "$$hashKey": "object:9383"
+              },
+              {
+                "value": "ALL0300_dummy",
+                "displayName": "ALL0300_dummy",
+                "$$hashKey": "object:9384"
+              },
+              {
+                "value": "ALM6270_dummy",
+                "displayName": "ALM6270_dummy",
+                "$$hashKey": "object:9385"
+              },
+              {
+                "value": "ALL1300_dummy",
+                "displayName": "ALL1300_dummy",
+                "$$hashKey": "object:9386"
+              },
+              {
+                "value": "BCC7117_dummy",
+                "displayName": "BCC7117_dummy",
+                "$$hashKey": "object:9387"
+              },
+              {
+                "value": "BCC7110_dummy",
+                "displayName": "BCC7110_dummy",
+                "$$hashKey": "object:9388"
+              },
+              {
+                "value": "BCC7440_dummy",
+                "displayName": "BCC7440_dummy",
+                "$$hashKey": "object:9389"
+              },
+              {
+                "value": "ALL7516_dummy",
+                "displayName": "ALL7516_dummy",
+                "$$hashKey": "object:9390"
+              },
+              {
+                "value": "ALL6901_dummy",
+                "displayName": "ALL6901_dummy",
+                "$$hashKey": "object:9391"
+              },
+              {
+                "value": "ALL6900_dummy",
+                "displayName": "ALL6900_dummy",
+                "$$hashKey": "object:9392"
+              },
+              {
+                "value": "ALL1380_dummy",
+                "displayName": "ALL1380_dummy",
+                "$$hashKey": "object:9393"
+              },
+              {
+                "value": "ALL8320_dummy",
+                "displayName": "ALL8320_dummy",
+                "$$hashKey": "object:9394"
+              },
+              {
+                "value": "ALM2350_dummy",
+                "displayName": "ALM2350_dummy",
+                "$$hashKey": "object:9395"
+              },
+              {
+                "value": "BCC8120_dummy",
+                "displayName": "BCC8120_dummy",
+                "$$hashKey": "object:9396"
+              },
+              {
+                "value": "BCA0300_dummy",
+                "displayName": "BCA0300_dummy",
+                "$$hashKey": "object:9397"
+              },
+              {
+                "value": "BCA7211_dummy",
+                "displayName": "BCA7211_dummy",
+                "$$hashKey": "object:9398"
+              },
+              {
+                "value": "ALL7440_dummy",
+                "displayName": "ALL7440_dummy",
+                "$$hashKey": "object:9399"
+              },
+              {
+                "value": "ALL7110_dummy",
+                "displayName": "ALL7110_dummy",
+                "$$hashKey": "object:9400"
+              },
+              {
+                "value": "ALL7334_dummy",
+                "displayName": "ALL7334_dummy",
+                "$$hashKey": "object:9401"
+              },
+              {
+                "value": "ALL9210_dummy",
+                "displayName": "ALL9210_dummy",
+                "$$hashKey": "object:9402"
+              },
+              {
+                "value": "ALL0316_dummy",
+                "displayName": "ALL0316_dummy",
+                "$$hashKey": "object:9403"
+              },
+              {
+                "value": "ALL8020_dummy",
+                "displayName": "ALL8020_dummy",
+                "$$hashKey": "object:9404"
+              },
+              {
+                "value": "ALM6289_dummy",
+                "displayName": "ALM6289_dummy",
+                "$$hashKey": "object:9405"
+              },
+              {
+                "value": "BCC7437_dummy",
+                "displayName": "BCC7437_dummy",
+                "$$hashKey": "object:9406"
+              },
+              {
+                "value": "ALM6200_dummy",
+                "displayName": "ALM6200_dummy",
+                "$$hashKey": "object:9407"
+              },
+              {
+                "value": "ALL1370_dummy",
+                "displayName": "ALL1370_dummy",
+                "$$hashKey": "object:9408"
+              },
+              {
+                "value": "ALL9220_dummy",
+                "displayName": "ALL9220_dummy",
+                "$$hashKey": "object:9409"
+              },
+              {
+                "value": "ALL7348_dummy",
+                "displayName": "ALL7348_dummy",
+                "$$hashKey": "object:9410"
+              },
+              {
+                "value": "STU0802_dummy",
+                "displayName": "STU0802_dummy",
+                "$$hashKey": "object:9411"
+              },
+              {
+                "value": "ALL7340_dummy",
+                "displayName": "ALL7340_dummy",
+                "$$hashKey": "object:9412"
+              },
+              {
+                "value": "BCC5620_dummy",
+                "displayName": "BCC5620_dummy",
+                "$$hashKey": "object:9413"
+              },
+              {
+                "value": "ALL8152_dummy",
+                "displayName": "ALL8152_dummy",
+                "$$hashKey": "object:9414"
+              },
+              {
+                "value": "ALM2002_dummy",
+                "displayName": "ALM2002_dummy",
+                "$$hashKey": "object:9415"
+              },
+              {
+                "value": "ALL7517_dummy",
+                "displayName": "ALL7517_dummy",
+                "$$hashKey": "object:9416"
+              },
+              {
+                "value": "ALL1360_dummy",
+                "displayName": "ALL1360_dummy",
+                "$$hashKey": "object:9417"
+              },
+              {
+                "value": "REH7110_dummy",
+                "displayName": "REH7110_dummy",
+                "$$hashKey": "object:9418"
+              },
+              {
+                "value": "ALL8220_dummy",
+                "displayName": "ALL8220_dummy",
+                "$$hashKey": "object:9419"
+              },
+              {
+                "value": "ALL8221_dummy",
+                "displayName": "ALL8221_dummy",
+                "$$hashKey": "object:9420"
+              },
+              {
+                "value": "ALM6160_dummy",
+                "displayName": "ALM6160_dummy",
+                "$$hashKey": "object:9421"
+              },
+              {
+                "value": "STU2007_dummy",
+                "displayName": "STU2007_dummy",
+                "$$hashKey": "object:9422"
+              },
+              {
+                "value": "AGB",
+                "displayName": "AGB",
+                "$$hashKey": "object:9423"
+              },
+              {
+                "value": "final_weight",
+                "displayName": "final_weight",
+                "$$hashKey": "object:9424"
+              }
+            ],
+            "hidden": false,
+            "$$hashKey": "object:9195"
+          }
+        }
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113178_727373852",
+      "id": "20180413-053023_183599640",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7754"
+    },
+    {
+      "title": "Import XGBoost model",
+      "text": "%python\nimport pickle\n#Set the location of the new packages from xai installation\n#in 'sys' path\n\nmodel = pickle.load(open(root + '/' + sel_folder + '/xgboost_model.pkl'))\n\nimport sys\nsys.path.append('/var/lib/zeppelin/.local/lib/python2.7/site-packages')\nfrom xai import xgb_explanation_api as xgbapi\n\ndtest = xgb.DMatrix(test_x, weight=test_w, feature_names=feature_names)\npred_proba_y = model.predict(dtest)\nxgbapi.model_perf_eval(test_y, pred_proba_y, sample_weight=test_w)\n\n#Also calculate the accuracy\npreds = model.predict(dtest)\n\nacc = accuracy_score(test_y, np.round(preds), sample_weight=test_w)\norig_acc = acc",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "runOnSelectionChange": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "Select pickle file": "xgboost_sample.pkl"
+        },
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113179_726989103",
+      "id": "20180330-035637_1665448822",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7755"
+    },
+    {
+      "title": "Top 15 important features of the imported model",
+      "text": "%python\nfrom xai import xgb_explanation_api as xgbapi\n\nimp_obj = xgbapi.visualize_important_features(model, feature_names)\n\np_obj = xgbapi.visualize_permutation_important_features(model, x, y, feature_names)\n\nmodelDf = imp_obj.model_important_features\n# coverDf = imp_obj.cover_important_features\ngainDf = imp_obj.gain_important_features\npermDf = p_obj.permutation_important_features\n\nimportant_feature_map = {}\nmap1 = {}\n\nimportant_feature_map['W'] = modelDf\nmap1['Weight'] = modelDf\n\n# important_feature_map['C'] = coverDf\nimportant_feature_map['G'] = gainDf\nmap1['Gain'] = gainDf\n\nimportant_feature_map['P'] = permDf\nmap1['Permutation'] = permDf\n\nk = \"\"\"\n<table style=\"width:100%\">\n  <tr>\n    <td>\"\"\" + imp_obj.model_important_html + \"\"\"</td>\n    <td>\"\"\" + imp_obj.gain_important_html + \"\"\"</td>\n  </tr>\n   <tr>\n     <td>\"\"\" + p_obj.permutation_important_html + \"\"\"</td>\n   </tr>  \n</table>\n\"\"\"\n#     <td>\"\"\" + imp_obj.cover_important_html+ \"\"\"</td> \n\nprint(\"%angular \" + k)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113179_726989103",
+      "id": "20180330-035853_1025845221",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7756"
+    },
+    {
+      "title": "Feature Importance Summary of top 10 features of the imported model",
+      "text": "%python\nprint(xgbapi.feature_importance_summary(map1))\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113180_725065358",
+      "id": "20180330-040202_2039003938",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7757"
+    },
+    {
+      "text": "%md\n# 2. Monotonicity Analysis\n\nNext, we display the monotonic relationship between the features and the prediction probability using Pearson's Correlation. The monotonic strength is a value between 1 (strong) and 0 (weak). The top 15 monotonically increasing and decreasing are shown.\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h1>2. Monotonicity Analysis</h1>\n<p>Next, we display the monotonic relationship between the features and the prediction probability using Pearson&rsquo;s Correlation. The monotonic strength is a value between 1 (strong) and 0 (weak). The top 15 monotonically increasing and decreasing are shown.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113180_725065358",
+      "id": "20180330-040202_342262423",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7758"
+    },
+    {
+      "title": "Monotonically increasing features",
+      "text": "%python\nd_x = xgb.DMatrix(x, y, weight=train_w, feature_names=feature_names)\npredictions = model.predict(d_x)\n\nimport monotonicity.monotonicity_discovery as md\n\nmdisco = md.MonotonictyDiscovery(x, predictions, list(feature_names))\nmdisco.check()\nmdisco.plot_increasing()",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113181_724680609",
+      "id": "20180330-040201_1630152200",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7759"
+    },
+    {
+      "title": "Monotonically decreasing features",
+      "text": "%python\n\nmdisco.plot_decreasing()\nmdcr_ft = mdisco.get_decreasing()[0]\nmincr_ft = mdisco.get_increasing()[0]\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113181_724680609",
+      "id": "20180330-040201_1168382664",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7760"
+    },
+    {
+      "text": "%md\n\n\nIn the following paragraphs, we will use the monotonic trends of the important features discovered using the method shown above and apply these as constraints to a new XGBoost model.\n\nFirst, display the PDP plots and ICE plots of the top 15 important features for the imported model. The user is provided an option to choose a subset of the top 15 important features for this purpose. The monotonic trend of the selected features are then applied as constraints to a new XGBoost model.\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<p>In the following paragraphs, we will use the monotonic trends of the important features discovered using the method shown above and apply these as constraints to a new XGBoost model.</p>\n<p>First, display the PDP plots and ICE plots of the top 15 important features for the imported model. The user is provided an option to choose a subset of the top 15 important features for this purpose. The monotonic trend of the selected features are then applied as constraints to a new XGBoost model.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113182_725834856",
+      "id": "20180330-040500_612096912",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7761"
+    },
+    {
+      "title": "Select important features to analyze monotonicity",
+      "text": "%python\noptions = []\ntop10f = modelDf[0:15]['Feature']\nfor i, fn in enumerate(top10f):\n    options.append((fn, fn))\n\nsel_fs = z.checkbox(\"\", options, [0])\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "runOnSelectionChange": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "": [
+            0,
+            "ApplicantTotalIncome",
+            "ApplicantAge",
+            "BureauScore",
+            "AverageMInFile",
+            "REH7120",
+            "REV5620",
+            "ALL8152",
+            "PIL8120",
+            "ALL7517"
+          ]
+        },
+        "forms": {
+          "": {
+            "name": "",
+            "displayName": "",
+            "type": "checkbox",
+            "defaultValue": [
+              0
+            ],
+            "options": [
+              {
+                "value": "REH7120",
+                "displayName": "REH7120",
+                "$$hashKey": "object:9710"
+              },
+              {
+                "value": "REV5620",
+                "displayName": "REV5620",
+                "$$hashKey": "object:9711"
+              },
+              {
+                "value": "BCA8370",
+                "displayName": "BCA8370",
+                "$$hashKey": "object:9712"
+              },
+              {
+                "value": "PIL8120",
+                "displayName": "PIL8120",
+                "$$hashKey": "object:9713"
+              },
+              {
+                "value": "BCC5620",
+                "displayName": "BCC5620",
+                "$$hashKey": "object:9714"
+              },
+              {
+                "value": "ALL8152",
+                "displayName": "ALL8152",
+                "$$hashKey": "object:9715"
+              },
+              {
+                "value": "BCC7140",
+                "displayName": "BCC7140",
+                "$$hashKey": "object:9716"
+              },
+              {
+                "value": "REV8320",
+                "displayName": "REV8320",
+                "$$hashKey": "object:9717"
+              },
+              {
+                "value": "BCC7110",
+                "displayName": "BCC7110",
+                "$$hashKey": "object:9718"
+              },
+              {
+                "value": "ALL6250",
+                "displayName": "ALL6250",
+                "$$hashKey": "object:9719"
+              },
+              {
+                "value": "ALL7517",
+                "displayName": "ALL7517",
+                "$$hashKey": "object:9720"
+              },
+              {
+                "value": "ALL8370",
+                "displayName": "ALL8370",
+                "$$hashKey": "object:9721"
+              },
+              {
+                "value": "BCC8322",
+                "displayName": "BCC8322",
+                "$$hashKey": "object:9722"
+              },
+              {
+                "value": "REV3423",
+                "displayName": "REV3423",
+                "$$hashKey": "object:9723"
+              },
+              {
+                "value": "IQT9417",
+                "displayName": "IQT9417",
+                "$$hashKey": "object:9724"
+              }
+            ],
+            "hidden": false,
+            "$$hashKey": "object:9702"
+          }
+        }
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113182_725834856",
+      "id": "20180330-040536_1697060948",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7762"
+    },
+    {
+      "title": "PDP Plots of selected features of the imported model",
+      "text": "%python\nfrom xai import fico_pdp_plots as plots\nimport matplotlib.pyplot as plt\n\nmodel.feature_names = None\ntx_df = pd.DataFrame(x)\ntx_df.columns = feature_names\ntopk = [str(xt) for xt in sel_fs]\ndef prediction(x):\n    xdmatrix = xgb.DMatrix(x, feature_names=model.feature_names)\n    val = model.predict(xdmatrix)\n    return val\n\nfn = model.feature_names\nmodel.feature_names = None\nplots.pdp_3d(tx_df, prediction, topk, feature_names,100)\nmodel.feature_names = fn",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113183_725450107",
+      "id": "20180330-040459_1726564097",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7763"
+    },
+    {
+      "title": "ICE Plots before and after applying monotonicity constraints",
+      "text": "%md\n\nThe following two paragraphs show the ICE plots of selected features of the imported model and the new constrained mode.\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<p>The following two paragraphs show the ICE plots of selected features of the imported model and the new constrained mode.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113183_725450107",
+      "id": "20180330-040458_867775074",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7764"
+    },
+    {
+      "text": "%python\nfrom xai import fico_pdp_plots as plots\nimport matplotlib.pyplot as plt\nprint('Accuracy of imported model: {}'.format(orig_acc))\n\ntx_df = pd.DataFrame(x)\ntx_df.columns = feature_names\ntopk = [str(xt) for xt in sel_fs]\n\ndef prediction(x):\n    xd = xgb.DMatrix(x, feature_names=feature_names)\n    val = model.predict(xd)\n    return val\n\n# plots.pdp_3d(tx_df, prediction, topk, feature_names,100)\nplots.ice_plots(model, x, feature_names,\n                         topk, center=False)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113184_711214398",
+      "id": "20180330-040134_439896607",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7765"
+    },
+    {
+      "text": "%python\nimport xgboost as xgb\ndtrain = xgb.DMatrix(train_x, train_y, weight=train_w, feature_names=feature_names)\ndtest = xgb.DMatrix(test_x, test_y, weight=test_w, feature_names=feature_names)\n\nm_mask = np.zeros(len(feature_names))\nm_mask = m_mask.astype(int)\nconstraint_map = {}\nsel_fs = [str(f) for f in sel_fs]\nfor k in sel_fs:\n    if k in mdcr_ft:\n        constraint_map[k] = -1\n    elif k in mincr_ft:\n        constraint_map[k] = 1\n\n\nfor i, fn in enumerate(feature_names):\n    monotone = constraint_map.get(fn)\n    if monotone is not None:\n        if monotone==1:\n            m_mask[i] = 1\n        elif monotone==-1:\n            m_mask[i] = -1\n\n\nm_mask = [str(t) for t in m_mask]\nstr1 = ','.join(m_mask)\nstr1 = '(' + str1 + ')'\n\nparam = {'max_depth' : 3, 'learning_rate' : 0.1, 'n_estimators' : 100, 'silent' : True, 'objective' : 'binary:logistic' }\nparam['monotone_constraints'] = str1\nnum_round = 100\nmodel_const = xgb.train(param, dtrain, num_round)\n\n\npreds = model_const.predict(dtest)\n\nacc = accuracy_score(test_y, np.round(preds), sample_weight=test_w)\n\n\n# print('Accuracy of last model: {}'.format(orig_acc))\nprint('Accuracy of new model : {}'.format(acc))\norig_acc=acc\n#Next plot it ...\n\ndef prediction(x):\n    xd = xgb.DMatrix(x, feature_names=feature_names)\n    val = model_const.predict(xd)\n    return val\n\nplots.ice_plots(model_const, x, feature_names, sel_fs, center=False)\n\n#Now set the model\nmodel = model_const\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": false,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113184_711214398",
+      "id": "20180330-040851_1858864046",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7766"
+    },
+    {
+      "text": "%md\n\n# 3. Explaining the model in general\n\n### Model Performance API\nThis API provides common classifier model evaluation metrics: ROC, Precision-Recall and Confusion Matrix. The following paragraph shows the API in action.\n\n#### Function\n`xgb_explanation_api.model_perf_eval(test_y, predicted_y)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**test_y**|         *ndarray*|       Test target values|\n|**predicted_y**|    *ndarray* |      Predicted target values|\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h1>3. Explaining the model in general</h1>\n<h3>Model Performance API</h3>\n<p>This API provides common classifier model evaluation metrics: ROC, Precision-Recall and Confusion Matrix. The following paragraph shows the API in action.</p>\n<h4>Function</h4>\n<p><code>xgb_explanation_api.model_perf_eval(test_y, predicted_y)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>test_y</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Test target values</td>\n    </tr>\n    <tr>\n      <td><strong>predicted_y</strong></td>\n      <td><em>ndarray</em> </td>\n      <td>Predicted target values</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113184_711214398",
+      "id": "20180330-041034_1902961172",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7767"
+    },
+    {
+      "title": "Model Performance",
+      "text": "%python\n#Set the location of the new packages from xai installation\n#in 'sys' path\n# pkl_loc=z.select(\"Select Model Pickle File\", pkl_files_sz)\n\nimport sys\nsys.path.append('/var/lib/zeppelin/.local/lib/python2.7/site-packages')\nfrom xai import xgb_explanation_api as xgbapi\n\ndtest = xgb.DMatrix(test_x,weight=test_w, feature_names=feature_names)\npred_proba_y = model.predict(dtest)\nxgbapi.model_perf_eval(test_y, pred_proba_y, sample_weight=test_w)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113185_710829649",
+      "id": "20180330-040849_1244946439",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7768"
+    },
+    {
+      "text": "%md\n\n## **Feature Importance Visualization API**\nThis API displays feature importance using four methods:\n1. Weight:  The number of times a feature is used to split the data across all trees.\n2. Gain:    The average gain of the feature when it is used in trees.\n3. Cover:   The average coverage of the feature when it is used in trees\n4. Permutation: The importance of a variable by measuring how the F1 score decreases when a \n                feature is not available. Since it is not possible to remove a variable \n                from the model, this effect is simulated by randomly shuffling the values of this column.\n\n\n#### Function\nThis api gives the important features using weight, gain and cover method. The result is returned as HTML strings and dataframes. \n`xgb_explanation_api.visualize_important_features(model, feature_names)`\n\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|         *XGBClassifier object*|       A XGBClassifier object|\n|**feature_names**|                        *ndarray*|                    Feature names|\n\n## <space/>\n\n#### Return Values\nThe results are returned in a Bunch object with the following fields:\n\n|Field Name|Description|\n|-|-|\n|**model_important_html**|         Important features by weight returned as an html string| \n|**cover_important_html**|         Important features by cover returned as an html string| \n|**gain_important_html**|          Important features by gain returned as an html string|  \n|**model_important_features**|     Important features by weight returned as dataframe| \n|**cover_important_features**|     Important features by cover returned as dataframe| \n|**gain_important_features**|      Important features by gain returned as dataframe|  \n\n#### Function\nThis api gives the important features using permutation method. The result is returned as HTML strings and dataframes. \n\n`xgb_explanation_api.visualize_permutation_important_features(model, x, y, feature_names)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|         *xgboost model*|       An xgboost model|\n|**x**|                        *2 D ndarray*|                    Training samples|\n|**y**|                        *ndarray*|                    Target values|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**topk**|                        *int*|topk=0 returns all features. Positive topk returns top <br/> selected features and negative topk returns bottom features. By default this value is set to 15|\n\n#### Return Values\nThe results are returned in a Bunch object with the following fields:\n\n|Field Name|Description|\n|-|-|\n|**permutation_important_html**|        Important features by weight returned as an html string|\n|**permutation_important_features**|    Important features by weight returned as a dataframe|\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Feature Importance Visualization API</strong></h2>\n<p>This API displays feature importance using four methods:<br/>1. Weight: The number of times a feature is used to split the data across all trees.<br/>2. Gain: The average gain of the feature when it is used in trees.<br/>3. Cover: The average coverage of the feature when it is used in trees<br/>4. Permutation: The importance of a variable by measuring how the F1 score decreases when a<br/> feature is not available. Since it is not possible to remove a variable<br/> from the model, this effect is simulated by randomly shuffling the values of this column.</p>\n<h4>Function</h4>\n<p>This api gives the important features using weight, gain and cover method. The result is returned as HTML strings and dataframes.<br/><code>xgb_explanation_api.visualize_important_features(model, feature_names)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>XGBClassifier object</em></td>\n      <td>A XGBClassifier object</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n  </tbody>\n</table>\n<h2><space/></h2>\n<h4>Return Values</h4>\n<p>The results are returned in a Bunch object with the following fields:</p>\n<table>\n  <thead>\n    <tr>\n      <th>Field Name</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model_important_html</strong></td>\n      <td>Important features by weight returned as an html string</td>\n    </tr>\n    <tr>\n      <td><strong>cover_important_html</strong></td>\n      <td>Important features by cover returned as an html string</td>\n    </tr>\n    <tr>\n      <td><strong>gain_important_html</strong></td>\n      <td>Important features by gain returned as an html string</td>\n    </tr>\n    <tr>\n      <td><strong>model_important_features</strong></td>\n      <td>Important features by weight returned as dataframe</td>\n    </tr>\n    <tr>\n      <td><strong>cover_important_features</strong></td>\n      <td>Important features by cover returned as dataframe</td>\n    </tr>\n    <tr>\n      <td><strong>gain_important_features</strong></td>\n      <td>Important features by gain returned as dataframe</td>\n    </tr>\n  </tbody>\n</table>\n<h4>Function</h4>\n<p>This api gives the important features using permutation method. The result is returned as HTML strings and dataframes. </p>\n<p><code>xgb_explanation_api.visualize_permutation_important_features(model, x, y, feature_names)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>2 D ndarray</em></td>\n      <td>Training samples</td>\n    </tr>\n    <tr>\n      <td><strong>y</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Target values</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>topk</strong></td>\n      <td><em>int</em></td>\n      <td>topk=0 returns all features. Positive topk returns top <br/> selected features and negative topk returns bottom features. By default this value is set to 15</td>\n    </tr>\n  </tbody>\n</table>\n<h4>Return Values</h4>\n<p>The results are returned in a Bunch object with the following fields:</p>\n<table>\n  <thead>\n    <tr>\n      <th>Field Name</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>permutation_important_html</strong></td>\n      <td>Important features by weight returned as an html string</td>\n    </tr>\n    <tr>\n      <td><strong>permutation_important_features</strong></td>\n      <td>Important features by weight returned as a dataframe</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113185_710829649",
+      "id": "20180330-041150_927919281",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7769"
+    },
+    {
+      "title": "Feature Importance",
+      "text": "%python\nimp_obj = xgbapi.visualize_important_features(model, feature_names)\n\np_obj = xgbapi.visualize_permutation_important_features(model, x, y, feature_names)\n\n# modelDf = imp_obj.model_important_features\n# coverDf = imp_obj.cover_important_features\n# gainDf = imp_obj.gain_important_features\n# permDf = p_obj.permutation_important_features\n\n# important_feature_map = {}\n# important_feature_map['X'] = modelDf\n# important_feature_map['C'] = coverDf\n# important_feature_map['G'] = gainDf\n# important_feature_map['P'] = permDf\n\nmodelDf = imp_obj.model_important_features\n# coverDf = imp_obj.cover_important_features\ngainDf = imp_obj.gain_important_features\npermDf = p_obj.permutation_important_features\n\nimportant_feature_map = {}\nmap1 = {}\n\nimportant_feature_map['W'] = modelDf\nmap1['Weight'] = modelDf\n\n# important_feature_map['C'] = coverDf\nimportant_feature_map['G'] = gainDf\nmap1['Gain'] = gainDf\n\nimportant_feature_map['P'] = permDf\nmap1['Permutation'] = permDf\n\n\nk = \"\"\"\n<table style=\"width:100%\">\n  <tr>\n    <td>\"\"\" + imp_obj.model_important_html + \"\"\"</td>\n    <td>\"\"\" + imp_obj.gain_important_html + \"\"\"</td>\n  </tr>\n    <tr>\n    <td>\"\"\" + p_obj.permutation_important_html + \"\"\"</td>\n  </tr>\n\n</table>\n\"\"\"\n#     <td>\"\"\" + imp_obj.cover_important_html+ \"\"\"</td> \n\nprint(\"%angular \" + k)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113186_711983896",
+      "id": "20180330-041149_1033634208",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7770"
+    },
+    {
+      "title": "Feature Importance summary Top 10 features",
+      "text": "%python\nprint(xgbapi.feature_importance_summary(map1))\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113187_711599147",
+      "id": "20180330-041149_1076346655",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7771"
+    },
+    {
+      "text": "%md\n## **Average Feature Contribution API**\nThis api provides model level estimates of contributions of each feature. The contributions are calculated by averaging the contributions of each feature over a set of random training samples. \nIt returns three different visualizations depending on how the samples were classified: \n\n1. Positive samples classified correctly and misclassfied \n2. Negative samples classified correctly and misclassfied\n3. Overall contribution\n\n#### Class\nThe visualizations have an Importance Indicator column which displays the variables that were identifed as important.\n\n`xgb_explanation_api.AverageContributionCalculator(x, y, model, feature_names, important_feature_map, random_sample_count=1000, topk=0)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|         *xgboost model*|       An xgboost model|\n|**x**|                        *2 D ndarray*|                    Training samples|\n|**y**|                        *ndarray*|                    Target values|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**important_feature_map**|                        *dictionary*| A dictionary of pairs (k , v), where k represents an <br/> indicator value and v is the important feature <br/> dataframe returned by xai.important_features() api     |\n|**topk**|                        *int*|topk=0 returns all features. Positive topk returns 'topk' features <br/> with highest feature contributions sorted in descending <br/> order and negative topk returns features with lowest contribution <br/> sorted in ascending order. By default, top 20 features are returned |\n\n\n#### Methods\nThis method computes the aggregate contributions. \n`xgb_explanation_api.AverageContributionCalculator().compute_aggregate_contributions()`\n\nThe results of computation are available in the class variable as given below:\n\n|Field Name|Description|\n|-|-|\n|**pos_result_html**|         Average contribution of positive samples which are correctly classified and misclassified| \n|**neg_result_html**|         Average contribution of negative samples which are correctly classified and misclassified| \n|**overall_results_html**|  Overall average contribution of positive and negative samples|\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Average Feature Contribution API</strong></h2>\n<p>This api provides model level estimates of contributions of each feature. The contributions are calculated by averaging the contributions of each feature over a set of random training samples.<br/>It returns three different visualizations depending on how the samples were classified: </p>\n<ol>\n  <li>Positive samples classified correctly and misclassfied</li>\n  <li>Negative samples classified correctly and misclassfied</li>\n  <li>Overall contribution</li>\n</ol>\n<h4>Class</h4>\n<p>The visualizations have an Importance Indicator column which displays the variables that were identifed as important.</p>\n<p><code>xgb_explanation_api.AverageContributionCalculator(x, y, model, feature_names, important_feature_map, random_sample_count=1000, topk=0)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>2 D ndarray</em></td>\n      <td>Training samples</td>\n    </tr>\n    <tr>\n      <td><strong>y</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Target values</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>important_feature_map</strong></td>\n      <td><em>dictionary</em></td>\n      <td>A dictionary of pairs (k , v), where k represents an <br/> indicator value and v is the important feature <br/> dataframe returned by xai.important_features() api </td>\n    </tr>\n    <tr>\n      <td><strong>topk</strong></td>\n      <td><em>int</em></td>\n      <td>topk=0 returns all features. Positive topk returns &lsquo;topk&rsquo; features <br/> with highest feature contributions sorted in descending <br/> order and negative topk returns features with lowest contribution <br/> sorted in ascending order. By default, top 20 features are returned </td>\n    </tr>\n  </tbody>\n</table>\n<h4>Methods</h4>\n<p>This method computes the aggregate contributions.<br/><code>xgb_explanation_api.AverageContributionCalculator().compute_aggregate_contributions()</code></p>\n<p>The results of computation are available in the class variable as given below:</p>\n<table>\n  <thead>\n    <tr>\n      <th>Field Name</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>pos_result_html</strong></td>\n      <td>Average contribution of positive samples which are correctly classified and misclassified</td>\n    </tr>\n    <tr>\n      <td><strong>neg_result_html</strong></td>\n      <td>Average contribution of negative samples which are correctly classified and misclassified</td>\n    </tr>\n    <tr>\n      <td><strong>overall_results_html</strong></td>\n      <td>Overall average contribution of positive and negative samples</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113187_711599147",
+      "id": "20180330-041435_1234474061",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7772"
+    },
+    {
+      "title": "Avg Contribution of Positive Samples",
+      "text": "%python\nacc = xgbapi.AverageContributionCalculator(x, y, model, feature_names, important_feature_map, random_sample_count=1000)\nagg_obj = acc.compute_aggregate_contributions()\n\nprint(\"%angular \" + agg_obj.pos_result_html)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113188_709675402",
+      "id": "20180330-041434_613308577",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7773"
+    },
+    {
+      "title": "Avg Contribution of Negative Samples",
+      "text": "%python\nprint(\"%angular \" + agg_obj.neg_result_html)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113188_709675402",
+      "id": "20180330-041434_1446552717",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7774"
+    },
+    {
+      "title": "Average Contribution across dataset",
+      "text": "%python\nprint(\"%angular \" + agg_obj.overall_results_html)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113189_709290653",
+      "id": "20180330-041434_71211297",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7775"
+    },
+    {
+      "text": "%md\n\n## Partial Dependency Plots\nThis API provides 2-D and 3-D Partial Dependecy Plots for RandomForest model. The plots show 1 or 2 features with the target probability. \n\n`fico_pdp_plots.pdp_3d(x_df, predict_function, feature_pair_list, feature_names, n_samples=1000)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**x_df**|         *Pandas dataframe*| A dataframe of the training samples|\n|**predict_function**|*Function reference*|Reference to a predict function that returns probabilities.<br/> E.g RandomForestClassifier.predict_proba|\n|**feature_pair_list**|                        *List of tuples*|For 3D plots, a list of tuples of the form (f1, f2), where <br/> f1 and f2 are the two features for the 3D plot. For 2D plots, a list of feature names|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**n_samples**|                        *int*| Number of samples to be use from x_df to be used for the plot |\n\n## <space/>\n\n## Individual Conditional Expectation (ICE) Plots\nThis API displays the ICE plots and the Partial Dependency plots. The ICE plots are displayed as clustered plots for legibility. The plots can be completly deaggregate. The ICE plot can be centered if required. For details on ICE plot refer: *Goldstein, A., A. Kapelner, J. Bleich, and E. Pitkin. \"Peeking inside the black box: Visualizing statistical learning with plots of individual conditional expectation\"*.\n\n`xai.fico_pdp_plots.ice_plots(model, x, feature_names, plot_var_list, cluster=True, num_clusters=10, center=False, num_grid_points=50, x_quantile=False, plot_org_pts=True, frac_to_plot=0.1, plot_lines=True, figsize=None)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|*xgboost model*|       An xgboost model|\n|**x**|         *ndarray*| Matrix of the training samples|\n|**feature_names**|         *list*| List of feature names|\n|**plot_var_list**|    *List of string*| List of variable names|\n|**cluster**| *boolean* | Cluster the ICE plots for legible display. Set to `True` by default.|\n|**num_clusters**| *int* | Number of ICE cluster plots. Set to `10` by default.|\n|**center**| *boolean* | Center the ICE plots. Set to `False` by default.|\n|**num_grid_points**| *int* | Required number of grid points (along X-axis). Set to `50` by default.|\n|**x_quantile**| *boolean* | Display X axis in quantiles. Set to `False` by default.|\n|**plot_org_pts**| *boolean* | Plot the original data points. Set to `True` by default.|\n|**frac_to_plot**| *numeric* | Fraction of data points to plot. Set to `0.1` by default.|\n|**plot_lines**| *boolean* | Enable or Disable the ICE lines. Set to `True` by default.|\n|**figsize**| *Tuple of two integers (x,y)* | Specify the size of the chart area. By default it is set to `(6,19)`|\n\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2>Partial Dependency Plots</h2>\n<p>This API provides 2-D and 3-D Partial Dependecy Plots for RandomForest model. The plots show 1 or 2 features with the target probability. </p>\n<p><code>fico_pdp_plots.pdp_3d(x_df, predict_function, feature_pair_list, feature_names, n_samples=1000)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>x_df</strong></td>\n      <td><em>Pandas dataframe</em></td>\n      <td>A dataframe of the training samples</td>\n    </tr>\n    <tr>\n      <td><strong>predict_function</strong></td>\n      <td><em>Function reference</em></td>\n      <td>Reference to a predict function that returns probabilities.<br/> E.g RandomForestClassifier.predict_proba</td>\n    </tr>\n    <tr>\n      <td><strong>feature_pair_list</strong></td>\n      <td><em>List of tuples</em></td>\n      <td>For 3D plots, a list of tuples of the form (f1, f2), where <br/> f1 and f2 are the two features for the 3D plot. For 2D plots, a list of feature names</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>n_samples</strong></td>\n      <td><em>int</em></td>\n      <td>Number of samples to be use from x_df to be used for the plot </td>\n    </tr>\n  </tbody>\n</table>\n<h2><space/></h2>\n<h2>Individual Conditional Expectation (ICE) Plots</h2>\n<p>This API displays the ICE plots and the Partial Dependency plots. The ICE plots are displayed as clustered plots for legibility. The plots can be completly deaggregate. The ICE plot can be centered if required. For details on ICE plot refer: <em>Goldstein, A., A. Kapelner, J. Bleich, and E. Pitkin. &ldquo;Peeking inside the black box: Visualizing statistical learning with plots of individual conditional expectation&rdquo;</em>.</p>\n<p><code>xai.fico_pdp_plots.ice_plots(model, x, feature_names, plot_var_list, cluster=True, num_clusters=10, center=False, num_grid_points=50, x_quantile=False, plot_org_pts=True, frac_to_plot=0.1, plot_lines=True, figsize=None)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Matrix of the training samples</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>list</em></td>\n      <td>List of feature names</td>\n    </tr>\n    <tr>\n      <td><strong>plot_var_list</strong></td>\n      <td><em>List of string</em></td>\n      <td>List of variable names</td>\n    </tr>\n    <tr>\n      <td><strong>cluster</strong></td>\n      <td><em>boolean</em> </td>\n      <td>Cluster the ICE plots for legible display. Set to <code>True</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>num_clusters</strong></td>\n      <td><em>int</em> </td>\n      <td>Number of ICE cluster plots. Set to <code>10</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>center</strong></td>\n      <td><em>boolean</em> </td>\n      <td>Center the ICE plots. Set to <code>False</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>num_grid_points</strong></td>\n      <td><em>int</em> </td>\n      <td>Required number of grid points (along X-axis). Set to <code>50</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>x_quantile</strong></td>\n      <td><em>boolean</em> </td>\n      <td>Display X axis in quantiles. Set to <code>False</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>plot_org_pts</strong></td>\n      <td><em>boolean</em> </td>\n      <td>Plot the original data points. Set to <code>True</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>frac_to_plot</strong></td>\n      <td><em>numeric</em> </td>\n      <td>Fraction of data points to plot. Set to <code>0.1</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>plot_lines</strong></td>\n      <td><em>boolean</em> </td>\n      <td>Enable or Disable the ICE lines. Set to <code>True</code> by default.</td>\n    </tr>\n    <tr>\n      <td><strong>figsize</strong></td>\n      <td><em>Tuple of two integers (x,y)</em> </td>\n      <td>Specify the size of the chart area. By default it is set to <code>(6,19)</code></td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113189_709290653",
+      "id": "20180330-041433_366986896",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7776"
+    },
+    {
+      "title": "PDP Plots",
+      "text": "%python\nfrom xai import fico_pdp_plots as plots\nimport matplotlib.pyplot as plt\n\nmodel.feature_names = None\ntx_df = pd.DataFrame(x)\ntx_df.columns = feature_names\n# topk = ['BureauScore', 'Loan2ValueRatio', 'PercentTradesNeverDelq']\ntopk = top10f[0:5]\ndef prediction(x):\n    xdmatrix = xgb.DMatrix(x, feature_names=model.feature_names)\n    val = model.predict(xdmatrix)\n    return val\n\nfn = model.feature_names\nmodel.feature_names = None\nplots.pdp_3d(tx_df, prediction, topk, feature_names,100)\nmodel.feature_names = fn\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113190_710444900",
+      "id": "20180330-041406_620826168",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7777"
+    },
+    {
+      "title": "ICE plots",
+      "text": "%python\nfrom xai import fico_pdp_plots as plotme\nplotme.ice_plots(model, x, feature_names,\n                         top10f[0:5], center=False)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113190_710444900",
+      "id": "20180330-041404_476626623",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7778"
+    },
+    {
+      "text": "%md\n## **Top Feature Interactions**\nThis feature provides two level feature interactions. The result is sorted by the gain in descending order.\n\n#### Class\n`.XGBModelDetails(model, feature_names)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|*An xgboost model*|An xgboost model|\n|**feature_names**|*ndarray*|Feature names|\n\n#### Methods\n`xgb_explanation_api.XGBModelDetails().visualize_interactions()`\n\n#### Return Values\nReturns an html string with visualization.\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Top Feature Interactions</strong></h2>\n<p>This feature provides two level feature interactions. The result is sorted by the gain in descending order.</p>\n<h4>Class</h4>\n<p><code>.XGBModelDetails(model, feature_names)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>An xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n  </tbody>\n</table>\n<h4>Methods</h4>\n<p><code>xgb_explanation_api.XGBModelDetails().visualize_interactions()</code></p>\n<h4>Return Values</h4>\n<p>Returns an html string with visualization.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113191_710060151",
+      "id": "20180330-041833_2103396155",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7779"
+    },
+    {
+      "title": "Top Feature Interactions",
+      "text": "%python\nxgb_details = xgbapi.XGBModelDetails(model, feature_names)\nprint(\"%angular \" + xgb_details.visualize_interactions())",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113191_710060151",
+      "id": "20180330-041833_1362057735",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7780"
+    },
+    {
+      "title": "PDP plots for Top 3 Feature Interactions",
+      "text": "%python\nfrom xai import fico_pdp_plots as plots\nall_list = []\ncnt = 0\nfor index, row in xgb_details.interactions()[0:4].iterrows():\n    list_inter = str(row['Interaction']).split(\"|\")\n    list_features = []\n    for feature in list_inter:\n        list_features.append(feature.strip())\n    set_inter = set(list_features)\n    if len(set_inter) == 2:\n        all_list.append((list_features[0], list_features[1]))\n        cnt += 1\n\ntx_df = pd.DataFrame(x)\ntx_df.columns = feature_names\n\ndef prediction(x):\n    xdmatrix = xgb.DMatrix(x, feature_names=model.feature_names)\n    val = model.predict(xdmatrix)\n    return val\n\nfn = model.feature_names\nmodel.feature_names = None\nplots.pdp_3d(tx_df, prediction, all_list, feature_names,300)\nmodel.feature_names = fn",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113192_708136407",
+      "id": "20180330-041832_448727676",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7781"
+    },
+    {
+      "text": "%md\n\n# 4. Explaining a specific prediction instance #\n\nIn the remainder of the notebook, we will explain a prediction instance. First, define a prediction instance by running the following paragraph.\n\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h1>4. Explaining a specific prediction instance</h1>\n<p>In the remainder of the notebook, we will explain a prediction instance. First, define a prediction instance by running the following paragraph.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113192_708136407",
+      "id": "20180330-042019_1837553645",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7782"
+    },
+    {
+      "title": "Load input data record",
+      "text": "%python\ndats = train_x[-250,:]  \ninst = pd.DataFrame([tuple(dats)], columns=feature_names)\nuserInput = inst.as_matrix()[0]\n# for i in range(-5,0):\n#     print(i)\n#     print(train_x[i,:])\n\n\n        # def prediction(x):\n        #      # fs = bst.feature_names\n        #     bst.feature_names = None\n\n        #     xdmatrix = xgb.DMatrix([x]) #, feature_names=feature_names)\n        #     val = bst.predict(xdmatrix)[0]\n        #      # bst.feature_names = fs\n        #     return val\n\n        # xgbapi.sensitivity_analysis(train_x, feature_names, userInput, bst, pred_fn=prediction, show_proba=0.5, resolution=100)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113193_707751658",
+      "id": "20180330-041832_496662913",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7783"
+    },
+    {
+      "text": "%md\n## **Instance Contributions**\nThis API provides explanation for a single prediction instance. \n\n`xgb_explanation_api.InstanceContribution(x, y, model, feature_names, user_input, important_feature_map, topk=0)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**x**|         *2 D ndarray*| A 2D array of training samples|\n|**y**|         *ndarray*| Array of target variable|\n|**model**|         *xgboost model*|       An xgboost model|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**user_input**| *ndarray* | Input prediction instance|\n|**important_feature_map**|*dictionary*| A dictionary of pairs (k , v), where k represents an <br/> indicator value and v is the important feature <br/> dataframe returned by xai.important_features() api     |\n|**topk**|                        *int*|topk=0 returns all features. Positive topk returns top <br/> selected features and negative topk returns bottom features|\n\n\n### Methods\n\n`xgb_explanation_api.InstanceContribution().explanation()`\nThis method computes the contributions for each feature in the input prediction instance. It returns an HTML string with the contributions.",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Instance Contributions</strong></h2>\n<p>This API provides explanation for a single prediction instance. </p>\n<p><code>xgb_explanation_api.InstanceContribution(x, y, model, feature_names, user_input, important_feature_map, topk=0)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>2 D ndarray</em></td>\n      <td>A 2D array of training samples</td>\n    </tr>\n    <tr>\n      <td><strong>y</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Array of target variable</td>\n    </tr>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>user_input</strong></td>\n      <td><em>ndarray</em> </td>\n      <td>Input prediction instance</td>\n    </tr>\n    <tr>\n      <td><strong>important_feature_map</strong></td>\n      <td><em>dictionary</em></td>\n      <td>A dictionary of pairs (k , v), where k represents an <br/> indicator value and v is the important feature <br/> dataframe returned by xai.important_features() api </td>\n    </tr>\n    <tr>\n      <td><strong>topk</strong></td>\n      <td><em>int</em></td>\n      <td>topk=0 returns all features. Positive topk returns top <br/> selected features and negative topk returns bottom features</td>\n    </tr>\n  </tbody>\n</table>\n<h3>Methods</h3>\n<p><code>xgb_explanation_api.InstanceContribution().explanation()</code><br/>This method computes the contributions for each feature in the input prediction instance. It returns an HTML string with the contributions.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113193_707751658",
+      "id": "20180330-041831_510122679",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7784"
+    },
+    {
+      "title": "Predict and Explain",
+      "text": "%python\nimport numpy as np\n\nxdmatrix = xgb.DMatrix(inst, feature_names=model.feature_names)\nprobability = model.predict(xdmatrix)[0]\n\ninfo = \"\"\"\n<div>Probability: {}</div>\n<div>Prediction: {} </div>\n<div>Prediction Threshold: {}</div>\n\"\"\"\n\npred = \"Positive Class\"\nif probability<0.9:\n    pred = \"Negative Class\"\n    \nprint(\"%angular \" + info.format(probability, pred, '0.9'))\n\ninst_df = pd.DataFrame(inst, columns=feature_names)\n# userInput = inst.as_matrix()[0]\n\nif_contrib = xgbapi.InstanceContribution(x, y, model, feature_names, inst_df, important_feature_map)\n\n\n\nprint(\"%angular \" + if_contrib.explanation())\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 7,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113194_708905905",
+      "id": "20180330-041403_1584829677",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7785"
+    },
+    {
+      "text": "%md\n## **Sensitivity Analysis Visualization**\nThis api provides sensitivity analysis for the single prediction instance. For the prediction instance, it shows the affect of varying one feature at a time and keeping the others constant.  \n\n`xgb_explanation_api.sensitivity_analysis(x, feature_names, user_input, model)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**x**|         *2 D ndarray*| A 2D array of training samples|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**user_input**| *int* | Input prediction instance|\n|**model**|         *An xgboost object*|       An xgboost model|\n|**feature_choice**|         *list*|       List of feature names for analysis|\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Sensitivity Analysis Visualization</strong></h2>\n<p>This api provides sensitivity analysis for the single prediction instance. For the prediction instance, it shows the affect of varying one feature at a time and keeping the others constant. </p>\n<p><code>xgb_explanation_api.sensitivity_analysis(x, feature_names, user_input, model)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>2 D ndarray</em></td>\n      <td>A 2D array of training samples</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>user_input</strong></td>\n      <td><em>int</em> </td>\n      <td>Input prediction instance</td>\n    </tr>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>An xgboost object</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>feature_choice</strong></td>\n      <td><em>list</em></td>\n      <td>List of feature names for analysis</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113194_708905905",
+      "id": "20180330-042843_34123145",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7786"
+    },
+    {
+      "title": "Sensitivity Analysis",
+      "text": "%python\n\nfeature_choice = top10f[0:10]\ndef prediction(x):\n    fs = model.feature_names\n    model.feature_names = None\n    xdmatrix = xgb.DMatrix([x]) #, feature_names=feature_names)\n    val = model.predict(xdmatrix)[0]\n    model.feature_names = fs\n    return val\n\nxgbapi.sensitivity_analysis(train_x, feature_names, userInput, model, feature_choice, pred_fn=prediction, show_proba=0.3, resolution=100.0)\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113195_708521156",
+      "id": "20180330-042921_1282102730",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7787"
+    },
+    {
+      "text": "%md\n\n## **Distance To Target Threshold**\nThis API provides a measure of how the features of the given prediction instance needs to be changed to achieve a higher threshold.  \n\n`xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold(model, feature_names, threshold, x, user_input)`\n\n|Parameters |Types|Description|\n|-|-|-|\n|**model**|         *An xgboost model*|       An xgboost model|\n|**feature_names**|                        *ndarray*|                    Feature names|\n|**threshold**|                        *float*|                    The target threshold to be achieved|\n|**x**|                        *2 D ndarray*|                    Training samples|\n|**user_input**| *ndarray* | Input prediction instance|\n\n### **Methods** \n`xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold().visualize_distance_to_target()`\nVisualization that displays the changed feature values along with the orginal feature values.\n\n`xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold().distance_to_target_table()`\nDisplays the changed feature values along with the orginal feature values in an HTML table.\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "tableHide": false,
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "<div class=\"markdown-body\">\n<h2><strong>Distance To Target Threshold</strong></h2>\n<p>This API provides a measure of how the features of the given prediction instance needs to be changed to achieve a higher threshold. </p>\n<p><code>xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold(model, feature_names, threshold, x, user_input)</code></p>\n<table>\n  <thead>\n    <tr>\n      <th>Parameters </th>\n      <th>Types</th>\n      <th>Description</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>model</strong></td>\n      <td><em>An xgboost model</em></td>\n      <td>An xgboost model</td>\n    </tr>\n    <tr>\n      <td><strong>feature_names</strong></td>\n      <td><em>ndarray</em></td>\n      <td>Feature names</td>\n    </tr>\n    <tr>\n      <td><strong>threshold</strong></td>\n      <td><em>float</em></td>\n      <td>The target threshold to be achieved</td>\n    </tr>\n    <tr>\n      <td><strong>x</strong></td>\n      <td><em>2 D ndarray</em></td>\n      <td>Training samples</td>\n    </tr>\n    <tr>\n      <td><strong>user_input</strong></td>\n      <td><em>ndarray</em> </td>\n      <td>Input prediction instance</td>\n    </tr>\n  </tbody>\n</table>\n<h3><strong>Methods</strong></h3>\n<p><code>xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold().visualize_distance_to_target()</code><br/>Visualization that displays the changed feature values along with the orginal feature values.</p>\n<p><code>xai.xgb_distance_to_target_threshold.XGBDistanceToTargetThreshold().distance_to_target_table()</code><br/>Displays the changed feature values along with the orginal feature values in an HTML table.</p>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1527639113195_708521156",
+      "id": "20180330-043152_230455445",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7788"
+    },
+    {
+      "text": "%python\nfrom xai.xgb_distance_to_target_threshold import XGBDistanceToTargetThreshold\nfrom xai.rf_distance_to_target_threshold import RFDistanceToTargetThreshold\n\nthreshold = z.input('Target Threshold', '0.7')\n\ndef proba_positive_class(pX):\n    xdmatrix = xgb.DMatrix(pX, feature_names=model.feature_names)\n    val = model.predict(xdmatrix)\n    return np.reshape(val, (-1, 1))\n\ndttt = XGBDistanceToTargetThreshold(model, feature_names, float(threshold), x, dats, proba_positive_class_fn=proba_positive_class)\ndttt.visualize_distance_to_target()\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {
+          "Target Threshold": "0.9"
+        },
+        "forms": {
+          "Target Threshold": {
+            "name": "Target Threshold",
+            "displayName": "Target Threshold",
+            "type": "input",
+            "defaultValue": "0.7",
+            "hidden": false,
+            "$$hashKey": "object:10683"
+          }
+        }
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113196_706597411",
+      "id": "20180330-041148_1235058395",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7789"
+    },
+    {
+      "text": "%python\ntable_html=dttt.distance_to_target_table()\nprint(\"%angular \" + table_html)",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "colWidth": 6,
+        "editorMode": "ace/mode/python",
+        "editorHide": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113196_706597411",
+      "id": "20180330-043236_932560012",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7790"
+    },
+    {
+      "text": "%python\n",
+      "dateUpdated": "2018-05-30T00:11:53+0000",
+      "config": {
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "results": {},
+        "enabled": true,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "userDisplayName": "unset",
+      "apps": [],
+      "jobName": "paragraph_1527639113197_706212662",
+      "id": "20180330-040839_372022948",
+      "dateCreated": "2018-05-30T00:11:53+0000",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500,
+      "$$hashKey": "object:7791"
+    }
+  ],
+  "name": "XGBoost Explanations Template",
+  "id": "2DHM8MJ8Q",
+  "projectName": "Andy example notebooks",
+  "createdBy": "Andy Flint",
+  "createDate": 1527639112756,
+  "lastModifiedBy": "Andy Flint",
+  "lastModifiedDate": 1527639113234,
+  "projectPath": "/default-domain/workspaces/AnalyticsModeler/amuser/Andy here/notebooks",
+  "projectId": "155ea20f-1573-42c4-be96-72ec052b6e62",
+  "angularObjects": {
+    "2DEFSU68P::2DHM8MJ8Q": [],
+    "2DDQMFKAX::2DHM8MJ8Q": [],
+    "2DFVBBGK8::2DHM8MJ8Q": [],
+    "2DF2B2PKW:shared_process": [],
+    "2DDDGGKRA::2DHM8MJ8Q": [],
+    "2DF33NSJQ::2DHM8MJ8Q": [],
+    "2DFA47569::2DHM8MJ8Q": [],
+    "2DDTB8232::2DHM8MJ8Q": [],
+    "2DDH7VJPG::2DHM8MJ8Q": [],
+    "2DCMA8DRX::2DHM8MJ8Q": []
+  },
+  "config": {
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "dependencies": [],
+  "info": {},
+  "lock": {}
+}
